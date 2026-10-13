@@ -3,37 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Harmonic Lab</title>
+<title>Partials Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;600&family=Instrument+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: an instrument panel — control strip on top, scope + spectrum side by side, harmonic faders full width below */
+/* Layout: two sound cards (A, B) on top, generators, a full-width scope, then spectrum + gesture side by side */
 :root {
-  --bg: #11161a;          /* panel housing */
-  --surface: #182025;     /* screen bezel */
-  --screen: #0c1114;      /* scope glass */
-  --grid: #24323a;        /* graticule */
-  --ink: #dfe7e9;         /* labels */
-  --muted: #7f9198;       /* secondary text */
-  --trace: #f2b544;       /* phosphor amber: signal */
-  --trace-dim: rgba(242,181,68,.18);
-  --cool: #6fc3c9;        /* cursor / selection */
-  --line: #2a3840;
+  --bg: #ece3d4;          /* sand */
+  --surface: #f6f0e6;     /* bleached linen */
+  --screen: #fbf8f2;      /* scope glass */
+  --grid: #e4d9c6;        /* graticule */
+  --line: #d6c7af;        /* borders */
+  --ink: #3a2d22;         /* dark umber */
+  --muted: #7a6651;       /* dry earth */
+  --a: #b0532c;           /* terracotta: sound A */
+  --a-dim: rgba(176,83,44,.16);
+  --b: #656a40;           /* sagebrush: sound B */
+  --b-dim: rgba(101,106,64,.18);
+  --accent: #8a5a32;      /* saddle brown: focus / selection */
+  --on-ab: #fbf3ea;
+  --chip: #e9dfcf;
   --font-data: "Martian Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #e7ecea; --surface: #f4f7f6; --screen: #fbfcfb; --grid: #dae2df;
-    --ink: #1b2528; --muted: #5d6e72; --trace: #b86a00; --trace-dim: rgba(184,106,0,.14);
-    --cool: #1f7f87; --line: #cad5d2; color-scheme: light;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1c1712; --surface: #251f19; --screen: #15110d; --grid: #30281f; --line: #3d3328;
+    --ink: #efe5d5; --muted: #a8947d; --a: #e08a5a; --a-dim: rgba(224,138,90,.2);
+    --b: #bcbd8f; --b-dim: rgba(188,189,143,.2); --accent: #d3a46a; --on-ab: #1c1712; --chip: #2f271f;
+    color-scheme: dark;
   }
 }
-:root[data-theme="light"] {
-  --bg: #e7ecea; --surface: #f4f7f6; --screen: #fbfcfb; --grid: #dae2df;
-  --ink: #1b2528; --muted: #5d6e72; --trace: #b86a00; --trace-dim: rgba(184,106,0,.14);
-  --cool: #1f7f87; --line: #cad5d2; color-scheme: light;
+:root[data-theme="dark"] {
+  --bg: #1c1712; --surface: #251f19; --screen: #15110d; --grid: #30281f; --line: #3d3328;
+  --ink: #efe5d5; --muted: #a8947d; --a: #e08a5a; --a-dim: rgba(224,138,90,.2);
+  --b: #bcbd8f; --b-dim: rgba(188,189,143,.2); --accent: #d3a46a; --on-ab: #1c1712; --chip: #2f271f;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -46,183 +52,539 @@ body {
 .wrap { max-width: 1400px; margin: 0 auto; display: grid; gap: 14px; }
 
 header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
-h1 { font: 600 17px/1 var(--font-data); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
-h1 span { color: var(--trace); }
+h1 { font: 600 17px/1 var(--font-data); letter-spacing: -.01em; margin: 0; }
+h1 span { color: var(--a); }
 .sub { color: var(--muted); font-size: 13px; }
 .spacer { flex: 1; }
+.lbl { font: 600 11px/1 var(--font-data); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
 
+button, select, input { font: inherit; color: inherit; }
 button {
   font: 500 13px/1 var(--font-body); color: var(--ink);
   background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
   padding: 8px 12px; cursor: pointer;
 }
 button:hover { border-color: var(--muted); }
-button:focus-visible, input:focus-visible, canvas:focus-visible { outline: 2px solid var(--cool); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.power { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
 button.power .led { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
-button.power[aria-pressed="true"] { border-color: var(--trace); }
-button.power[aria-pressed="true"] .led { background: var(--trace); box-shadow: 0 0 8px var(--trace); }
+button.power[aria-pressed="true"] { border-color: var(--a); }
+button.power[aria-pressed="true"] .led { background: var(--a); box-shadow: 0 0 8px var(--a); }
+button[aria-pressed="true"]:not(.power) { background: var(--chip); border-color: var(--muted); }
 
-.controls {
-  display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px;
-}
-.ctl { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.ctl.f0 { flex: 1 1 380px; }
-.ctl label { font: 600 11px/1 var(--font-data); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); white-space: nowrap; }
-.ctl input[type=range] { flex: 1; min-width: 120px; accent-color: var(--trace); }
-.readout { font: 600 15px/1 var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.readout small { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 6px; }
-.ctl.level input { width: 120px; flex: none; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 7px 11px; font-size: 12.5px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.seg button.a[aria-pressed="true"] { background: var(--a); color: var(--on-ab); }
+.seg button.b[aria-pressed="true"] { background: var(--b); color: var(--on-ab); }
+.hgroup { display: flex; align-items: center; gap: 8px; }
+.hgroup input[type=range] { width: 110px; accent-color: var(--a); }
+.readout { font: 600 13px/1 var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.readout small { font-weight: 400; color: var(--muted); font-size: 11px; margin-left: 5px; }
 
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; align-items: start; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: minmax(0,1fr); } }
 
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 12px; min-width: 0; display: grid; gap: 8px; }
-.phead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.phead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .phead h2 { font: 600 12px/1 var(--font-data); text-transform: uppercase; letter-spacing: .08em; margin: 0; }
 .phead .note { color: var(--muted); font-size: 12.5px; }
 .phead .tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .tools button { padding: 6px 10px; font-size: 12px; }
-.tools .val { font: 12px var(--font-data); color: var(--muted); min-width: 56px; text-align: center; font-variant-numeric: tabular-nums; }
+.val { font: 12px var(--font-data); color: var(--muted); min-width: 34px; text-align: center; font-variant-numeric: tabular-nums; }
+
+.badge { font: 600 12px/1 var(--font-data); width: 22px; height: 22px; display: grid; place-items: center; border-radius: 5px; color: var(--on-ab); }
+.badge.a { background: var(--a); } .badge.b { background: var(--b); }
+.slot { transition: border-color .2s; }
+.slot.sounding { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.playing { display: none; font: 600 11px/1 var(--font-data); color: var(--accent); }
+.slot.sounding .playing { display: inline; }
+
+/* partial rows */
+.prow, .phdr { display: grid; grid-template-columns: 20px 104px minmax(60px,1fr) 62px 56px 26px; gap: 8px; align-items: center; }
+.phdr { font: 600 10px/1 var(--font-data); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 0 4px; }
+.plist { display: grid; gap: 2px; max-height: 268px; overflow-y: auto; padding: 2px 4px; border-radius: 6px; background: var(--screen); border: 1px solid var(--grid); }
+.prow { padding: 3px 0; }
+.prow.off { opacity: .45; }
+.prow input[type=number], .forms input[type=number], .frow input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+.prow input[type=number]::-webkit-inner-spin-button, .prow input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.prow input[type=number] { width: 100%; padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); font: 12.5px var(--font-data); font-variant-numeric: tabular-nums; }
+.fwrap { display: flex; align-items: center; gap: 4px; }
+.fwrap i { font: normal 11px var(--font-data); color: var(--muted); }
+.prow input[type=range] { width: 100%; accent-color: var(--a); }
+.slot[data-slot=B] .prow input[type=range] { accent-color: var(--b); }
+.prow input[type=checkbox] { accent-color: var(--accent); margin: 0; }
+.ratio { font: 11.5px var(--font-data); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.ratio.int { color: var(--ink); }
+.pdel { padding: 3px 0; font-size: 15px; line-height: 1; border-color: transparent; background: transparent; color: var(--muted); }
+.empty { color: var(--muted); font-size: 13px; padding: 14px 6px; text-align: center; }
+@media (max-width: 460px) {
+  .prow, .phdr { grid-template-columns: 20px 96px minmax(40px,1fr) 56px 24px; }
+  .ratio, .phdr .rh { display: none; }
+}
+.forms { display: grid; gap: 6px; }
+.forms form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.forms input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--screen); font-size: 13px; }
+.forms .nf { width: 96px; } .forms .na { width: 70px; }
+.forms .tl { flex: 1 1 220px; min-width: 0; font-family: var(--font-data); font-size: 12px; }
+.forms label { font-size: 12.5px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.ana { font-size: 13px; color: var(--muted); min-height: 2.9em; }
+.ana b { color: var(--ink); font-weight: 600; }
+.ana .err { color: var(--a); }
+
+/* generators */
+.gens { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.gcard { border: 1px solid var(--grid); background: var(--screen); border-radius: 6px; padding: 10px; display: grid; gap: 8px; align-content: start; }
+.gcard h3 { margin: 0; font: 600 13px/1.2 var(--font-body); }
+.gcard p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.frow { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.frow label { font-size: 12.5px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.frow input, .frow select { padding: 5px 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); font-size: 13px; }
+.frow input { width: 76px; font-family: var(--font-data); font-size: 12.5px; }
+button.go { justify-self: start; border-color: var(--muted); }
+
+/* scope */
+.scale { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.scale input[type=range] { flex: 1 1 160px; min-width: 120px; accent-color: var(--accent); }
+.scale .sep { width: 1px; height: 20px; background: var(--line); }
+.chk { display: inline-flex; gap: 5px; align-items: center; font-size: 12.5px; cursor: pointer; }
+.chk.a input { accent-color: var(--a); } .chk.b input { accent-color: var(--b); }
+.chk.a { color: var(--a); font-weight: 600; } .chk.b { color: var(--b); font-weight: 600; }
 
 canvas { display: block; width: 100%; background: var(--screen); border-radius: 5px; touch-action: none; }
-#wave, #spec { height: 280px; }
-#harm { height: 240px; cursor: crosshair; }
+#wave { height: 300px; cursor: crosshair; }
+#spec { height: 260px; }
 .hint { font-size: 12.5px; color: var(--muted); min-height: 1.4em; font-variant-numeric: tabular-nums; }
 .hint b { color: var(--ink); font-weight: 600; }
-footer { color: var(--muted); font-size: 12.5px; max-width: 75ch; }
+.hint .ka { color: var(--a); font-weight: 600; } .hint .kb { color: var(--b); font-weight: 600; }
+
+/* gesture */
+.gbody { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 560px) { .gbody { grid-template-columns: minmax(0,1fr); } }
+.stage { position: relative; aspect-ratio: 4 / 3; background: var(--screen); border-radius: 6px; overflow: hidden; border: 1px solid var(--grid); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
+.stage video, .stage #ov { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; transform: scaleX(-1); display: none; }
+#ov { background: transparent; }
+.stage[data-mode=camera] video, .stage[data-mode=camera] #ov { display: block; }
+.stage[data-mode=camera] #pad { display: none; }
+#pad { cursor: crosshair; }
+.gparams { display: grid; gap: 10px; align-content: start; }
+.gp { display: grid; grid-template-columns: 82px minmax(0,1fr) 82px; gap: 8px; align-items: center; }
+.gp label { font-size: 12.5px; }
+.gp input { width: 100%; accent-color: var(--accent); }
+.gp .readout { text-align: right; font-size: 12px; }
+.gmap { margin: 0; font-size: 12.5px; color: var(--muted); }
+.gmap b { color: var(--ink); font-weight: 600; }
+.gstatus { margin: 0; font-size: 12.5px; color: var(--accent); min-height: 1.4em; }
+
+footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
+footer h2 { font: 600 12px/1 var(--font-data); text-transform: uppercase; letter-spacing: .08em; color: var(--ink); margin: 6px 0 8px; }
+footer ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>harmonic<span>lab</span></h1>
-    <div class="sub">Build a sound from a fundamental and its harmonics</div>
+    <h1>partials<span>lab</span></h1>
+    <div class="sub">Type frequencies, hear them, see them, then play them with your body</div>
     <div class="spacer"></div>
+    <div class="hgroup"><span class="lbl">Hear</span>
+      <div class="seg" id="hear">
+        <button class="a" data-v="A" aria-pressed="true">A</button>
+        <button class="b" data-v="B" aria-pressed="false">B</button>
+        <button data-v="alt" aria-pressed="false" title="Switch between A and B every 1.5 s">A⇄B</button>
+      </div>
+    </div>
+    <div class="hgroup"><label class="lbl" for="level">Level</label><input id="level" type="range" min="0" max="100" value="35"><span class="readout" id="levelOut">35%</span></div>
     <button id="power" class="power" aria-pressed="false"><span class="led"></span><span id="powerLabel">Sound off</span></button>
   </header>
 
-  <section class="controls" aria-label="Controls">
-    <div class="ctl f0">
-      <label for="f0">f0</label>
-      <input id="f0" type="range" min="0" max="1000" step="1">
-      <div class="readout" id="f0Out">220.0 Hz<small>A3</small></div>
+  <div class="grid2" id="slots"></div>
+
+  <section class="panel">
+    <div class="phead">
+      <h2>Generate</h2><span class="note">replaces the list in the chosen sound</span>
+      <div class="tools"><span class="lbl">into</span>
+        <div class="seg" id="genTarget"><button class="a" data-v="A" aria-pressed="true">A</button><button class="b" data-v="B" aria-pressed="false">B</button></div>
+      </div>
     </div>
-    <div class="ctl level">
-      <label for="level">Level</label>
-      <input id="level" type="range" min="0" max="100" value="40">
-      <div class="readout" id="levelOut">40%</div>
+    <div class="gens">
+      <div class="gcard">
+        <h3>A frequency and its multiples</h3>
+        <div class="frow">
+          <label>Base <input id="hF0" type="number" value="100" min="1" max="20000" step="any"> Hz</label>
+          <label>Count <input id="hN" type="number" value="10" min="1" max="64" step="1"></label>
+        </div>
+        <div class="frow"><label>Amplitudes <select id="hLaw">
+          <option value="equal">all equal</option>
+          <option value="inv" selected>1/n (bright, saw-like)</option>
+          <option value="inv2">1/n² (mellow)</option>
+          <option value="odd">odd only, 1/n (square-like)</option>
+        </select></label></div>
+        <button class="go" id="hGo">Make 100, 200, 300 …</button>
+      </div>
+      <div class="gcard">
+        <h3>Random frequencies</h3>
+        <div class="frow">
+          <label>Count <input id="rN" type="number" value="10" min="1" max="64" step="1"></label>
+          <label>From <input id="rLo" type="number" value="100" min="1" max="20000" step="any"></label>
+          <label>to <input id="rHi" type="number" value="1000" min="1" max="20000" step="any"> Hz</label>
+        </div>
+        <div class="frow"><label>Amplitudes <select id="rLaw">
+          <option value="equal">all equal</option>
+          <option value="inv" selected>1/rank (like 1/n)</option>
+          <option value="rand">random</option>
+        </select></label></div>
+        <div class="frow"><button class="go" id="rGo">Roll a random set</button><button id="rAdd">+ 1 random</button></div>
+      </div>
+      <div class="gcard">
+        <h3>Side by side</h3>
+        <p>Uses the base, count and amplitude settings on the left for both sounds, so only the frequency pattern differs. Listening switches to A⇄B.</p>
+        <button class="go" id="cmpRand">A: multiples · B: random, same range</button>
+        <button class="go" id="cmpDetune">A: multiples · B: each nudged ±3%</button>
+        <button class="go" id="cmpMissing">A: multiples · B: fundamental removed</button>
+      </div>
     </div>
+  </section>
+
+  <section class="panel">
+    <div class="phead">
+      <h2>Waveform</h2><span class="note">the sum of every sine wave, drawn from the numbers above</span>
+      <div class="tools">
+        <label class="chk a"><input type="checkbox" id="showA" checked> A</label>
+        <label class="chk b"><input type="checkbox" id="showB" checked> B</label>
+        <button id="live" aria-pressed="false">Scroll in time</button>
+      </div>
+    </div>
+    <div class="scale">
+      <span class="lbl">Time window</span>
+      <div class="seg" id="winChips">
+        <button data-v="0.002">2 ms</button><button data-v="0.01">10 ms</button><button data-v="0.1">100 ms</button><button data-v="1">1 s</button><button data-v="10">10 s</button>
+      </div>
+      <input type="range" id="winSl" min="0" max="1000" aria-label="Time window, 1 millisecond to 20 seconds">
+      <span class="readout" id="winOut">20 ms</span>
+      <span class="sep" aria-hidden="true"></span>
+      <span class="lbl">Height</span>
+      <button id="yFit" aria-pressed="true" title="Scale to the tallest peak in view">Fit</button>
+      <button id="yLess" aria-label="Shrink vertically">−</button><span class="val" id="yOut">×1</span><button id="yMore" aria-label="Stretch vertically">+</button>
+    </div>
+    <canvas id="wave" aria-label="Waveform of sounds A and B. Scroll over it to change the time window."></canvas>
+    <div class="hint" id="waveHint"></div>
   </section>
 
   <div class="grid2">
     <section class="panel">
       <div class="phead">
-        <h2>Waveform</h2>
-        <span class="note">sum of all harmonics</span>
-        <div class="tools">
-          <button id="zoomOut" aria-label="Show more time">−</button>
-          <span class="val" id="winOut">10 ms</span>
-          <button id="zoomIn" aria-label="Show less time">+</button>
-        </div>
+        <h2>Spectrum</h2><span class="note">one line per frequency · log 20 Hz–20 kHz</span>
+        <div class="tools"><div class="seg" id="specMode"><button data-v="db" aria-pressed="true">dB</button><button data-v="lin" aria-pressed="false">Linear</button></div></div>
       </div>
-      <canvas id="wave" aria-label="Waveform display"></canvas>
-      <div class="hint" id="waveHint"></div>
+      <canvas id="spec" aria-label="Spectrum of sounds A and B"></canvas>
+      <div class="hint" id="specHint">Hover a line to read its frequency and ratio to the lowest one.</div>
     </section>
+
     <section class="panel">
       <div class="phead">
-        <h2>Spectrum</h2>
-        <span class="note">Fourier transform · log 20 Hz–20 kHz · dB</span>
+        <h2>Gesture</h2><span class="note">a harmonic sound you play with your body</span>
+        <div class="tools"><div class="seg" id="gSrc">
+          <button data-v="off" aria-pressed="true">Sliders</button><button data-v="pad" aria-pressed="false">Touch pad</button><button data-v="tilt" aria-pressed="false">Tilt</button><button data-v="camera" aria-pressed="false">Camera</button>
+        </div></div>
       </div>
-      <canvas id="spec" aria-label="Spectrum display"></canvas>
-      <div class="hint" id="specHint">Hover the spectrum to read a frequency.</div>
+      <div class="gbody">
+        <div class="stage" id="stage" data-mode="off">
+          <canvas id="pad" aria-label="Touch pad: left to right sets the fundamental, bottom to top sets the number of harmonics"></canvas>
+          <video id="cam" playsinline muted></video>
+          <canvas id="ov"></canvas>
+        </div>
+        <div class="gparams">
+          <div class="gp"><label for="gF0">Fundamental</label><input type="range" id="gF0" min="0" max="1000"><span class="readout" id="gF0o"></span></div>
+          <div class="gp"><label for="gN">Harmonics</label><input type="range" id="gN" min="1" max="32" step="1"><span class="readout" id="gNo"></span></div>
+          <div class="gp"><label for="gB">Brightness</label><input type="range" id="gB" min="0" max="100"><span class="readout" id="gBo"></span></div>
+          <div class="gp"><label for="gS">Stretch</label><input type="range" id="gS" min="0" max="100"><span class="readout" id="gSo"></span></div>
+          <div class="frow">
+            <label class="chk"><input type="checkbox" id="gSnap"> Snap to notes</label>
+            <span class="lbl" style="margin-left:auto">drives</span>
+            <div class="seg" id="gTarget"><button class="a" data-v="A" aria-pressed="true">A</button><button class="b" data-v="B" aria-pressed="false">B</button></div>
+          </div>
+          <p class="gmap" id="gMap"></p>
+          <p class="gstatus" id="gStatus" role="status"></p>
+        </div>
+      </div>
     </section>
   </div>
 
-  <section class="panel">
-    <div class="phead">
-      <h2>Harmonics</h2>
-      <span class="note">drag across the bars to draw amplitudes · bar 1 is the fundamental</span>
-      <div class="tools">
-        <button data-preset="sine">Sine</button>
-        <button data-preset="saw">Sawtooth</button>
-        <button data-preset="square">Square</button>
-        <button data-preset="flat">Flat</button>
-        <button data-preset="clear">Clear</button>
-      </div>
-    </div>
-    <canvas id="harm" tabindex="0" aria-label="Harmonic amplitudes. Left and right arrows pick a harmonic, up and down change its amplitude."></canvas>
-    <div class="hint" id="harmHint">Harmonic n has frequency n × f0.</div>
-  </section>
-
-  <footer>Each harmonic is a sine wave at a whole-number multiple of the fundamental. The waveform is their sum; the spectrum shows one peak for every harmonic you turn up. Harmonics above 20 kHz are greyed out because you can’t hear them. Use headphones or a low level when you turn the sound on.</footer>
+  <footer>
+    <h2>Things to try</h2>
+    <ul>
+      <li>Press <b>A: multiples · B: random</b>, turn the sound on and listen to A⇄B. A fuses into one pitched tone; B sounds like a cluster or a bell.</li>
+      <li>Look at both at <b>10 ms</b>: A repeats the same shape over and over, while B never quite repeats. At <b>1 s</b> or <b>10 s</b>, B shows a slow, uneven swell (beating) where A is a steady band.</li>
+      <li>Type <code>200, 201</code> into a sound and set the window to 10 s: two close frequencies beat once per second.</li>
+      <li>Try <b>fundamental removed</b>: B has no energy at the base frequency, but you still hear the same pitch, and its waveform still repeats at the same period.</li>
+      <li>In Gesture, raise <b>Stretch</b> slowly: the harmonics drift off whole-number ratios and the sound turns metallic.</li>
+    </ul>
+  </footer>
 </div>
 
 <script>
 (() => {
-  const NH = 40, FS = 48000, NYQ = FS / 2, F_MIN = 40, F_MAX = 2000;
-  const amps = new Float32Array(NH);
-  let f0 = 220, level = 0.4, winMs = 10;
-  const WINDOWS = [2, 5, 10, 20, 50, 100];
+  'use strict';
+  const FS = 48000, NYQ = FS / 2, MAXP = 64, F_LO = 55, F_SPAN = 32, WIN_MIN = 0.001, WIN_MAX = 20;
+  const MP = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+  const POSE_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
 
   const $ = id => document.getElementById(id);
-  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-
-  // ---------- presets ----------
-  const presets = {
-    sine:   n => n === 1 ? 1 : 0,
-    saw:    n => 1 / n,
-    square: n => n % 2 ? 1 / n : 0,
-    flat:   n => n <= 12 ? 0.6 : 0,
-    clear:  () => 0,
-  };
-  function applyPreset(name) {
-    for (let i = 0; i < NH; i++) amps[i] = presets[name](i + 1);
-    changed();
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const trim0 = s => s.includes('.') ? s.replace(/\.?0+$/, '') : s;
+  const fmtF = f => f < 1000 ? trim0(f.toFixed(f < 100 ? 2 : 1)) + ' Hz' : trim0((f / 1000).toFixed(2)) + ' kHz';
+  const fmtDur = t => t >= 1 ? trim0(t.toFixed(2)) + ' s' : t >= 0.001 ? trim0((t * 1000).toFixed(2)) + ' ms' : trim0((t * 1e6).toFixed(0)) + ' µs';
+  function fmtTick(t, step) {
+    if (step >= 0.1) return trim0(t.toFixed(step >= 1 ? 0 : 1)) + ' s';
+    const s = step * 1000;
+    return trim0((t * 1000).toFixed(s >= 1 ? 0 : s >= 0.1 ? 1 : 2)) + ' ms';
   }
-
-  // ---------- f0 slider (log scale) ----------
-  const sliderToF = v => F_MIN * Math.pow(F_MAX / F_MIN, v / 1000);
-  const fToSlider = f => Math.round(1000 * Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN));
   const NOTES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
   function noteName(f) {
-    const m = 69 + 12 * Math.log2(f / 440), r = Math.round(m), cents = Math.round((m - r) * 100);
-    return NOTES[(r % 12 + 12) % 12] + (Math.floor(r / 12) - 1) + (cents ? ` ${cents > 0 ? '+' : ''}${cents}¢` : '');
+    const m = 69 + 12 * Math.log2(f / 440), r = Math.round(m), c = Math.round((m - r) * 100);
+    return NOTES[(r % 12 + 12) % 12] + (Math.floor(r / 12) - 1) + (c ? ` ${c > 0 ? '+' : ''}${c}¢` : '');
   }
-  $('f0').value = fToSlider(f0);
-  $('f0').addEventListener('input', e => { f0 = sliderToF(+e.target.value); changed(); });
-  $('level').addEventListener('input', e => {
-    level = e.target.value / 100; $('levelOut').textContent = e.target.value + '%';
-    if (gain) gain.gain.setTargetAtTime(audible() ? level : 0, ctx.currentTime, 0.02);
-  });
+  function setSeg(id, v) { $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === String(v))); }
+  function onSeg(id, fn) { $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (b) fn(b.dataset.v); }); }
 
-  // ---------- audio ----------
-  let ctx = null, osc = null, gain = null, on = false;
-  const audible = () => on && amps.some((a, i) => a > 0 && (i + 1) * f0 < NYQ);
-  function updateAudio() {
+  // ================= state =================
+  const slots = { A: [], B: [] };          // each: [{ f, a, on }]
+  const listDirty = { A: false, B: false };
+  let dirty = true;
+
+  const active = P => P.filter(p => p.on && p.a > 0 && p.f > 0 && p.f < NYQ);
+  const lowest = P => { const A = active(P); return A.length ? Math.min(...A.map(p => p.f)) : 0; };
+
+  // ================= sound cards =================
+  const slotHTML = k => `
+  <section class="panel slot" data-slot="${k}" id="slot${k}">
+    <div class="phead">
+      <span class="badge ${k.toLowerCase()}">${k}</span><h2>Sound ${k}</h2>
+      <span class="note" id="cnt${k}"></span><span class="playing">♪ playing</span>
+      <div class="tools">
+        <button data-act="rand">+ Random</button>
+        <button data-act="sort">Sort</button>
+        <button data-act="copy">Copy ${k === 'A' ? 'B' : 'A'}</button>
+        <button data-act="clear">Clear</button>
+      </div>
+    </div>
+    <div class="phdr" aria-hidden="true"><span></span><span>Frequency</span><span>Amplitude</span><span></span><span class="rh" style="text-align:right">ratio</span><span></span></div>
+    <div class="plist" id="list${k}"></div>
+    <div class="forms">
+      <form data-act="add">
+        <label>Add <input class="nf" type="number" min="1" max="20000" step="any" placeholder="Hz" aria-label="New frequency in hertz" required></label>
+        <label>amp <input class="na" type="number" min="0" max="1" step="0.01" value="0.5" aria-label="New amplitude, 0 to 1"></label>
+        <button type="submit">Add</button>
+      </form>
+      <form data-act="type">
+        <input class="tl" type="text" placeholder="or type a list: 100, 200:0.5, 300:0.33" aria-label="Type frequencies, optionally with :amplitude, separated by commas">
+        <button type="submit">Replace</button><button type="button" data-act="append">Append</button>
+      </form>
+    </div>
+    <div class="ana" id="ana${k}"></div>
+  </section>`;
+  $('slots').innerHTML = slotHTML('A') + slotHTML('B');
+
+  function ratioTxt(f, fmin) {
+    if (!fmin) return '';
+    const r = f / fmin, int = Math.abs(r - Math.round(r)) < 0.005;
+    return `<span class="ratio${int ? ' int' : ''}">×${int ? Math.round(r) : r.toFixed(2)}</span>`;
+  }
+  function renderList(k) {
+    const P = slots[k], el = $('list' + k), fmin = lowest(P);
+    listDirty[k] = false;
+    el.innerHTML = P.length ? P.map((p, i) => `<div class="prow${p.on ? '' : ' off'}" data-i="${i}">
+      <input type="checkbox" class="pon" ${p.on ? 'checked' : ''} aria-label="Partial ${i + 1} on">
+      <span class="fwrap"><input type="number" class="pf" min="1" max="20000" step="any" value="${+p.f.toFixed(2)}" aria-label="Frequency ${i + 1} in hertz"><i>Hz</i></span>
+      <input type="range" class="pa" min="0" max="1" step="0.01" value="${p.a}" aria-label="Amplitude ${i + 1}">
+      <input type="number" class="pan" min="0" max="1" step="0.01" value="${+p.a.toFixed(3)}" aria-label="Amplitude ${i + 1} value">
+      ${ratioTxt(p.f, fmin) || '<span class="ratio"></span>'}
+      <button type="button" class="pdel" aria-label="Remove partial ${i + 1}">×</button></div>`).join('')
+      : '<div class="empty">No frequencies yet. Add one below, type a list, or use a generator.</div>';
+  }
+  function refreshRatios(k) {
+    const P = slots[k], fmin = lowest(P);
+    $('list' + k).querySelectorAll('.prow').forEach(row => {
+      const p = P[+row.dataset.i]; if (!p) return;
+      row.querySelector('.ratio').outerHTML = ratioTxt(p.f, fmin) || '<span class="ratio"></span>';
+    });
+  }
+
+  // periodicity: largest common fundamental c (≥ 5 Hz) so that every frequency is a whole multiple of c
+  function analyze(P) {
+    const A = active(P);
+    if (!A.length) return null;
+    const fmin = Math.min(...A.map(p => p.f));
+    for (let k = 1; k <= 24; k++) {
+      const c = fmin / k; if (c < 5) break;
+      if (A.every(p => Math.abs(p.f - Math.round(p.f / c) * c) <= Math.max(0.05, p.f * 5e-4))) return { c, k, period: 1 / c, n: A.length };
+    }
+    return { c: 0, n: A.length };
+  }
+  function updateAna(k) {
+    const P = slots[k], A = active(P), r = analyze(P);
+    $('cnt' + k).textContent = A.length ? `${A.length} on · ${fmtF(Math.min(...A.map(p => p.f)))} – ${fmtF(Math.max(...A.map(p => p.f)))}` : 'silent';
+    let html;
+    if (!r) html = 'Silent. Nothing is switched on with an amplitude above 0.';
+    else if (r.n === 1) html = `<b>Pure tone.</b> A single sine wave that repeats every <b>${fmtDur(r.period)}</b>.`;
+    else if (r.c && r.k === 1) html = `<b>Harmonic.</b> Every frequency is a whole multiple of the lowest (${fmtF(r.c)}), so the waveform repeats every <b>${fmtDur(r.period)}</b> and you hear one pitch.`;
+    else if (r.c) html = `<b>Periodic.</b> All frequencies are multiples of ${fmtF(r.c)}, which is not itself present, yet the waveform repeats every <b>${fmtDur(r.period)}</b> and your ear usually hears that pitch.`;
+    else html = `<b>Inharmonic.</b> No common fundamental above 5 Hz, so the waveform never settles into a short repeating shape. It tends to sound like a chord, bell or cluster.`;
+    $('ana' + k).innerHTML = html;
+  }
+
+  function parseList(str) {
+    const out = [], bad = [];
+    str.replace(/\s*[:@]\s*/g, ':').split(/[\s,;]+/).filter(Boolean).forEach(tok => {
+      const m = /^(\d*\.?\d+)(?:hz)?(?::(\d*\.?\d+))?$/i.exec(tok);
+      const f = m && +m[1], a = m && m[2] != null ? +m[2] : 1;
+      if (m && f > 0 && f <= 20000 && a >= 0 && a <= 1) out.push({ f, a, on: true }); else bad.push(tok);
+    });
+    return { out, bad };
+  }
+  function setSlot(k, P) { slots[k] = P.slice(0, MAXP); renderList(k); changed(k); }
+
+  ['A', 'B'].forEach(k => {
+    const card = $('slot' + k), list = $('list' + k);
+    list.addEventListener('input', e => {
+      const row = e.target.closest('.prow'); if (!row) return;
+      const p = slots[k][+row.dataset.i], c = e.target.classList;
+      if (c.contains('pf')) { const v = parseFloat(e.target.value); if (!(v > 0 && v <= 20000)) return; p.f = v; refreshRatios(k); }
+      else if (c.contains('pa')) { p.a = +e.target.value; row.querySelector('.pan').value = p.a; }
+      else if (c.contains('pan')) { const v = parseFloat(e.target.value); if (!(v >= 0 && v <= 1)) return; p.a = v; row.querySelector('.pa').value = v; refreshRatios(k); }
+      else return;
+      changed(k);
+    });
+    list.addEventListener('change', e => {
+      if (!e.target.classList.contains('pon')) return;
+      const row = e.target.closest('.prow'); slots[k][+row.dataset.i].on = e.target.checked;
+      row.classList.toggle('off', !e.target.checked); refreshRatios(k); changed(k);
+    });
+    list.addEventListener('click', e => {
+      const b = e.target.closest('.pdel'); if (!b) return;
+      slots[k].splice(+b.closest('.prow').dataset.i, 1); renderList(k); changed(k);
+    });
+    card.addEventListener('click', e => {
+      const b = e.target.closest('button[data-act]'); if (!b) return;
+      const act = b.dataset.act, other = k === 'A' ? 'B' : 'A';
+      if (act === 'clear') setSlot(k, []);
+      else if (act === 'copy') setSlot(k, slots[other].map(p => ({ ...p })));
+      else if (act === 'sort') setSlot(k, slots[k].slice().sort((x, y) => x.f - y.f));
+      else if (act === 'rand') addRandom(k);
+      else if (act === 'append') typeIn(k, true);
+    });
+    card.addEventListener('submit', e => {
+      e.preventDefault();
+      const form = e.target;
+      if (form.dataset.act === 'add') {
+        const f = parseFloat(form.querySelector('.nf').value), a = clamp(parseFloat(form.querySelector('.na').value) || 0, 0, 1);
+        if (!(f > 0 && f <= 20000)) return;
+        if (slots[k].length >= MAXP) return msg(k, `Up to ${MAXP} frequencies per sound.`);
+        slots[k].push({ f, a, on: true }); slots[k].sort((x, y) => x.f - y.f);
+        renderList(k); changed(k); form.querySelector('.nf').value = ''; form.querySelector('.nf').focus();
+      } else typeIn(k, false);
+    });
+  });
+  function msg(k, text) { $('ana' + k).innerHTML = `<span class="err">${text}</span>`; }
+  function typeIn(k, append) {
+    const inp = $('slot' + k).querySelector('.tl'), { out, bad } = parseList(inp.value);
+    if (!out.length) return msg(k, bad.length ? `Couldn’t read “${bad[0]}”. Use numbers like 220 or 220:0.5 (frequency:amplitude).` : 'Type some frequencies first, e.g. 100, 200:0.5, 300:0.33');
+    setSlot(k, append ? slots[k].concat(out) : out);
+    if (bad.length) msg(k, `Skipped ${bad.map(b => `“${b}”`).join(', ')}: not a frequency between 1 and 20000 Hz (amplitude 0–1).`);
+    else inp.value = '';
+  }
+
+  // ================= generators =================
+  let genTarget = 'A';
+  onSeg('genTarget', v => { genTarget = v; setSeg('genTarget', v); });
+  const law = (name, n) => name === 'equal' ? 1 : name === 'inv' ? 1 / n : name === 'inv2' ? 1 / (n * n) : name === 'odd' ? (n % 2 ? 1 / n : 0) : Math.random() * 0.8 + 0.2;
+  function harmonicSet(f0, N, lw) {
+    const P = [];
+    for (let n = 1; n <= N && n * f0 < 20000; n++) { const a = law(lw, n); if (a > 0) P.push({ f: +(n * f0).toFixed(3), a: +a.toFixed(3), on: true }); }
+    return P;
+  }
+  function randomSet(N, lo, hi, lw) {
+    if (hi < lo) [lo, hi] = [hi, lo];
+    const fs = [];
+    while (fs.length < N) {
+      const f = Math.round(lo * Math.pow(hi / lo, Math.random()));  // log-uniform: even spread in pitch
+      if (!fs.includes(f) || hi - lo < N) fs.push(f);
+    }
+    return fs.sort((x, y) => x - y).map((f, i) => ({ f, a: +law(lw, i + 1).toFixed(3), on: true }));
+  }
+  const hPar = () => ({ f0: clamp(+$('hF0').value || 100, 1, 20000), N: clamp(Math.round(+$('hN').value || 1), 1, MAXP), lw: $('hLaw').value });
+  function hLabel() { const { f0, N } = hPar(); const list = [1, 2, 3].filter(n => n <= N).map(n => trim0((n * f0).toFixed(1))).join(', '); $('hGo').textContent = `Make ${list}${N > 3 ? ' … ' + trim0((N * f0).toFixed(1)) : ''} Hz`; }
+  ['hF0', 'hN'].forEach(id => $(id).addEventListener('input', hLabel)); hLabel();
+  $('hGo').onclick = () => { const { f0, N, lw } = hPar(); setSlot(genTarget, harmonicSet(f0, N, lw)); };
+  $('rGo').onclick = () => setSlot(genTarget, randomSet(clamp(Math.round(+$('rN').value || 1), 1, MAXP), clamp(+$('rLo').value || 100, 1, 20000), clamp(+$('rHi').value || 1000, 1, 20000), $('rLaw').value));
+  $('rAdd').onclick = () => addRandom(genTarget);
+  function addRandom(k) {
+    if (slots[k].length >= MAXP) return msg(k, `Up to ${MAXP} frequencies per sound.`);
+    const lo = clamp(+$('rLo').value || 100, 1, 20000), hi = clamp(+$('rHi').value || 1000, 1, 20000);
+    slots[k].push({ f: Math.round(lo * Math.pow(hi / lo, Math.random())), a: 0.5, on: true });
+    renderList(k); changed(k);
+  }
+  function compare(makeB) {
+    const { f0, N, lw } = hPar(), A = harmonicSet(f0, N, lw);
+    setSlot('A', A); setSlot('B', makeB(A, f0, N, lw)); setHear('alt');
+  }
+  $('cmpRand').onclick = () => compare((A, f0, N, lw) => {
+    const R = randomSet(A.length, f0, Math.max(f0 * 1.01, A[A.length - 1].f), 'equal');
+    return R.map((p, i) => ({ ...p, a: A[i].a }));
+  });
+  $('cmpDetune').onclick = () => compare(A => A.map((p, i) => ({ ...p, f: i ? +(p.f * (1 + (Math.random() * 2 - 1) * 0.03)).toFixed(2) : p.f })));
+  $('cmpMissing').onclick = () => compare(A => A.slice(1).map(p => ({ ...p })));
+
+  // ================= audio =================
+  let ctx = null, master = null, bank = [], on = false, level = 0.35, hear = 'A', altCur = 'A', altTimer = null;
+  const heard = () => hear === 'alt' ? altCur : hear;
+  function syncAudio() {
+    ['A', 'B'].forEach(k => $('slot' + k).classList.toggle('sounding', on && heard() === k));
     if (!ctx) return;
-    const real = new Float32Array(NH + 1), imag = new Float32Array(NH + 1);
-    for (let i = 0; i < NH; i++) imag[i + 1] = amps[i];
-    if (amps.some(a => a > 0)) osc.setPeriodicWave(ctx.createPeriodicWave(real, imag));
-    osc.frequency.setTargetAtTime(f0, ctx.currentTime, 0.01);
-    gain.gain.setTargetAtTime(audible() ? level : 0, ctx.currentTime, 0.02);
+    const t = ctx.currentTime, P = active(slots[heard()]), sum = P.reduce((s, p) => s + p.a, 0);
+    master.gain.setTargetAtTime(on && sum ? level / Math.max(1, sum) : 0, t, 0.03);
+    P.forEach((p, i) => {
+      let v = bank[i];
+      if (!v) {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        g.gain.value = 0; o.frequency.value = p.f; o.connect(g).connect(master); o.start();
+        v = bank[i] = { o, g };
+      }
+      v.o.frequency.setTargetAtTime(p.f, t, 0.012);
+      v.g.gain.setTargetAtTime(p.a, t, 0.02);
+    });
+    while (bank.length > P.length) { const v = bank.pop(); v.g.gain.setTargetAtTime(0, t, 0.02); v.o.stop(t + 0.3); }
   }
   $('power').addEventListener('click', async () => {
     if (!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
-      osc = ctx.createOscillator(); gain = ctx.createGain();
-      gain.gain.value = 0; osc.connect(gain).connect(ctx.destination); osc.start();
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -8; comp.ratio.value = 6;
+      master = ctx.createGain(); master.gain.value = 0; master.connect(comp).connect(ctx.destination);
     }
     on = !on;
     if (on) await ctx.resume();
-    updateAudio();
+    syncAudio();
     $('power').setAttribute('aria-pressed', on);
     $('powerLabel').textContent = on ? 'Sound on' : 'Sound off';
+    if (on) gStatus('');
   });
+  $('level').addEventListener('input', e => { level = e.target.value / 100; $('levelOut').textContent = e.target.value + '%'; syncAudio(); });
+  function setHear(v) {
+    hear = v; setSeg('hear', v);
+    clearInterval(altTimer); altTimer = null;
+    if (v === 'alt') { altCur = 'A'; altTimer = setInterval(() => { altCur = altCur === 'A' ? 'B' : 'A'; syncAudio(); }, 1500); }
+    syncAudio();
+  }
+  onSeg('hear', setHear);
 
-  // ---------- canvas helpers ----------
+  function changed(k) { updateAna(k); syncAudio(); dirty = true; }
+
+  // ================= drawing helpers =================
   function fit(c) {
     const dpr = window.devicePixelRatio || 1, r = c.getBoundingClientRect();
     const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
@@ -231,215 +593,426 @@ footer { color: var(--muted); font-size: 12.5px; max-width: 75ch; }
     return { g, w: r.width, h: r.height };
   }
   const MONO = () => `11px ${css('--font-data')}`;
-
-  // signal value at time t (seconds), excluding inaudible harmonics
-  function sample(t) {
-    let s = 0;
-    for (let i = 0; i < NH; i++) {
-      const a = amps[i]; if (!a) continue;
-      const f = (i + 1) * f0; if (f >= NYQ) break;
-      s += a * Math.sin(2 * Math.PI * f * t);
-    }
-    return s;
+  function prep(P) {
+    const A = active(P);
+    return { w: Float64Array.from(A, p => 2 * Math.PI * p.f), a: Float64Array.from(A, p => p.a), fmax: A.length ? Math.max(...A.map(p => p.f)) : 0, sum: A.reduce((s, p) => s + p.a, 0) };
   }
-  function peakAbs() {
-    let p = 0; const T = 1 / f0;
-    for (let k = 0; k < 2048; k++) p = Math.max(p, Math.abs(sample(k / 2048 * T)));
-    return p || 1;
-  }
+  function val(S, t) { let s = 0; for (let i = 0; i < S.w.length; i++) s += S.a[i] * Math.sin(S.w[i] * t); return s; }
+  const hash = (x, k) => { const s = Math.sin(x * 12.9898 + k * 78.233) * 43758.5453; return s - Math.floor(s); };
+  function niceStep(span, target) { const raw = span / target, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
 
-  // ---------- waveform ----------
+  // ================= waveform =================
+  let winSec = 0.02, yZoom = 1, yFit = true, live = false, tOff = 0, waveGeom = null, waveHoverX = null, fastDraw = false;
+  const YZ = [0.25, 0.5, 1, 2, 4, 8];
+  const winToSl = s => Math.round(1000 * Math.log(s / WIN_MIN) / Math.log(WIN_MAX / WIN_MIN));
+  const slToWin = v => WIN_MIN * Math.pow(WIN_MAX / WIN_MIN, v / 1000);
+  function setWin(s) {
+    winSec = clamp(s, WIN_MIN, WIN_MAX); $('winSl').value = winToSl(winSec); $('winOut').textContent = fmtDur(winSec);
+    $('winChips').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', Math.abs(+b.dataset.v - winSec) / winSec < 0.01));
+    dirty = true;
+  }
+  onSeg('winChips', v => setWin(+v));
+  $('winSl').addEventListener('input', e => setWin(slToWin(+e.target.value)));
+  $('wave').addEventListener('wheel', e => { e.preventDefault(); setWin(winSec * Math.pow(1.0015, e.deltaY)); }, { passive: false });
+  $('wave').addEventListener('pointermove', e => { waveHoverX = e.clientX - e.currentTarget.getBoundingClientRect().left; dirty = true; });
+  $('wave').addEventListener('pointerleave', () => { waveHoverX = null; dirty = true; });
+  $('yFit').onclick = () => { yFit = !yFit; $('yFit').setAttribute('aria-pressed', yFit); dirty = true; };
+  const setYZ = d => { yZoom = YZ[clamp(YZ.indexOf(yZoom) + d, 0, YZ.length - 1)]; $('yOut').textContent = '×' + yZoom; dirty = true; };
+  $('yLess').onclick = () => setYZ(-1); $('yMore').onclick = () => setYZ(1);
+  $('live').onclick = () => { live = !live; $('live').setAttribute('aria-pressed', live); if (!live) tOff = 0; dirty = true; };
+  ['showA', 'showB'].forEach(id => $(id).addEventListener('change', () => dirty = true));
+
   function drawWave() {
     const { g, w, h } = fit($('wave'));
     g.clearRect(0, 0, w, h);
-    const pad = { l: 8, r: 8, t: 10, b: 22 }, pw = w - pad.l - pad.r, ph = h - pad.t - pad.b, mid = pad.t + ph / 2;
-    // graticule: 10 time divisions
-    g.strokeStyle = css('--grid'); g.lineWidth = 1;
-    for (let i = 0; i <= 10; i++) { const x = pad.l + pw * i / 10; g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke(); }
+    const pad = { l: 10, r: 10, t: 10, b: 24 }, pw = w - pad.l - pad.r, ph = h - pad.t - pad.b, mid = pad.t + ph / 2;
+    const t0 = tOff, t1 = tOff + winSec;
+    waveGeom = { pad, pw };
+    // time graticule
+    const step = niceStep(winSec, Math.max(3, Math.floor(pw / 95)));
+    g.strokeStyle = css('--grid'); g.lineWidth = 1; g.fillStyle = css('--muted'); g.font = MONO(); g.textBaseline = 'top';
+    for (let i = Math.ceil(t0 / step - 1e-9); i * step <= t1 + 1e-12; i++) {
+      const t = i * step, x = pad.l + (t - t0) / winSec * pw;
+      g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke();
+      g.textAlign = x < pad.l + 20 ? 'left' : x > pad.l + pw - 20 ? 'right' : 'center';
+      g.fillText(fmtTick(t, step), x, pad.t + ph + 6);
+    }
     for (let j = 0; j <= 4; j++) { const y = pad.t + ph * j / 4; g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + pw, y); g.stroke(); }
-    g.fillStyle = css('--muted'); g.font = MONO(); g.textBaseline = 'top';
-    for (let i = 0; i <= 10; i += 2) {
-      const ms = winMs * i / 10, label = (Number.isInteger(ms) ? ms : ms.toFixed(1)) + (i === 10 ? ' ms' : '');
-      g.textAlign = i === 0 ? 'left' : i === 10 ? 'right' : 'center';
-      g.fillText(label, pad.l + pw * i / 10, pad.t + ph + 6);
-    }
-    if (!amps.some(a => a > 0)) { g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('silence: draw some harmonics below', w / 2, mid); return; }
-    const p = peakAbs(), steps = Math.max(400, Math.ceil(pw * 2));
-    g.strokeStyle = css('--trace'); g.lineWidth = 2; g.lineJoin = 'round';
-    g.shadowColor = css('--trace'); g.shadowBlur = 6;
-    g.beginPath();
-    for (let k = 0; k <= steps; k++) {
-      const t = (k / steps) * winMs / 1000, y = mid - sample(t) / p * (ph / 2) * 0.92, x = pad.l + pw * k / steps;
-      k ? g.lineTo(x, y) : g.moveTo(x, y);
-    }
-    g.stroke(); g.shadowBlur = 0;
-    const periods = winMs / 1000 * f0;
-    $('waveHint').innerHTML = `Period <b>${(1000 / f0).toFixed(2)} ms</b> · <b>${periods < 10 ? periods.toFixed(1) : Math.round(periods)}</b> cycles in view`;
-  }
-  function zoom(dir) {
-    const i = WINDOWS.indexOf(winMs) + dir;
-    if (i >= 0 && i < WINDOWS.length) { winMs = WINDOWS[i]; $('winOut').textContent = winMs + ' ms'; drawWave(); }
-  }
-  $('zoomOut').onclick = () => zoom(1);
-  $('zoomIn').onclick = () => zoom(-1);
+    g.strokeStyle = css('--line'); g.beginPath(); g.moveTo(pad.l, mid); g.lineTo(pad.l + pw, mid); g.stroke();
 
-  // ---------- spectrum (real FFT of the synthesized signal) ----------
-  const N = 16384, DF = FS / N, hann = new Float32Array(N);
-  for (let i = 0; i < N; i++) hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
-  const re = new Float64Array(N), im = new Float64Array(N), db = new Float32Array(N / 2);
-  function fft(re, im) {
-    const n = re.length;
-    for (let i = 1, j = 0; i < n; i++) {
-      let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit;
-      if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; }
-    }
-    for (let len = 2; len <= n; len <<= 1) {
-      const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
-      for (let i = 0; i < n; i += len) {
-        let cr = 1, ci = 0;
-        for (let k = 0; k < len / 2; k++) {
-          const a = i + k, b = a + len / 2, tr = re[b] * cr - im[b] * ci, ti = re[b] * ci + im[b] * cr;
-          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
-          const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
-        }
+    const vis = [];
+    if ($('showA').checked) vis.push(['A', prep(slots.A), css('--a')]);
+    if ($('showB').checked) vis.push(['B', prep(slots.B), css('--b')]);
+    const series = vis.filter(v => v[1].w.length).map(([k, S, col]) => {
+      if (S.fmax * winSec / pw <= 0.2) {           // ≥ 5 px per cycle: draw the exact line
+        const n = Math.ceil(pw * 2), ys = new Float32Array(n + 1);
+        for (let i = 0; i <= n; i++) ys[i] = val(S, t0 + i / n * winSec);
+        return { k, S, col, line: ys, n };
       }
+      // too dense to draw every cycle: show the min–max envelope per pixel column
+      const cols = Math.ceil(pw), K = fastDraw ? 16 : 40, dt = winSec / cols, mn = new Float32Array(cols), mx = new Float32Array(cols);
+      for (let x = 0; x < cols; x++) {
+        let lo = Infinity, hi = -Infinity;
+        for (let q = 0; q < K; q++) { const v = val(S, t0 + (x + (q + hash(x, q)) / K) * dt); if (v < lo) lo = v; if (v > hi) hi = v; }
+        mn[x] = lo; mx[x] = hi;
+      }
+      return { k, S, col, mn, mx, cols };
+    });
+    if (!series.length) {
+      g.fillStyle = css('--muted'); g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(vis.length ? 'silence: add some frequencies above' : 'tick A or B to show a waveform', w / 2, mid);
+      $('waveHint').textContent = '';
+      return;
     }
+    let peak = 0;
+    series.forEach(s => {
+      if (s.line) for (const v of s.line) peak = Math.max(peak, Math.abs(v));
+      else for (let x = 0; x < s.cols; x++) peak = Math.max(peak, -s.mn[x], s.mx[x]);
+    });
+    const norm = (yFit ? peak : Math.max(...series.map(s => s.S.sum))) || 1;
+    const Y = v => mid - v / norm * yZoom * (ph / 2) * 0.92;
+    g.save(); g.beginPath(); g.rect(pad.l, pad.t, pw, ph); g.clip();
+    series.forEach((s, si) => {
+      g.strokeStyle = s.col; g.fillStyle = s.col; g.lineJoin = 'round';
+      if (s.line) {
+        g.lineWidth = 2; g.globalAlpha = si ? 0.9 : 1; g.beginPath();
+        for (let i = 0; i <= s.n; i++) { const x = pad.l + pw * i / s.n, y = Y(s.line[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); }
+        g.stroke();
+      } else {
+        g.globalAlpha = si ? 0.45 : 0.55; g.beginPath();
+        for (let x = 0; x < s.cols; x++) g.lineTo(pad.l + x + 0.5, Y(s.mx[x]) - 0.5);
+        for (let x = s.cols - 1; x >= 0; x--) g.lineTo(pad.l + x + 0.5, Y(s.mn[x]) + 0.5);
+        g.closePath(); g.fill();
+        g.globalAlpha = 1; g.lineWidth = 1; g.beginPath();
+        for (let x = 0; x < s.cols; x++) g.lineTo(pad.l + x + 0.5, Y(s.mx[x]) - 0.5);
+        g.stroke(); g.beginPath();
+        for (let x = 0; x < s.cols; x++) g.lineTo(pad.l + x + 0.5, Y(s.mn[x]) + 0.5);
+        g.stroke();
+      }
+      g.globalAlpha = 1;
+    });
+    if (waveHoverX != null && waveHoverX >= pad.l && waveHoverX <= pad.l + pw) {
+      g.strokeStyle = css('--accent'); g.setLineDash([3, 3]); g.beginPath(); g.moveTo(waveHoverX, pad.t); g.lineTo(waveHoverX, pad.t + ph); g.stroke(); g.setLineDash([]);
+    }
+    g.restore();
+
+    const hint = [];
+    if (waveHoverX != null && waveHoverX >= pad.l && waveHoverX <= pad.l + pw) {
+      const t = t0 + (waveHoverX - pad.l) / pw * winSec;
+      hint.push(`t = <b>${fmtDur(t || 0)}</b>`);
+      series.forEach(s => hint.push(`<span class="k${s.k.toLowerCase()}">${s.k}</span> ${val(s.S, t).toFixed(3)}`));
+    } else {
+      series.forEach(s => {
+        const r = analyze(slots[s.k]), cyc = r && r.c ? winSec / r.period : 0;
+        hint.push(`<span class="k${s.k.toLowerCase()}">${s.k}</span> ` + (r && r.c ? `repeats every <b>${fmtDur(r.period)}</b> (${cyc < 10 ? cyc.toFixed(1) : Math.round(cyc)} repeats in view)` : 'never repeats exactly'));
+      });
+      if (series.some(s => !s.line)) hint.push('too many cycles to draw one by one, so the band shows the range the wave sweeps through');
+    }
+    $('waveHint').innerHTML = hint.join(' · ');
   }
-  function computeSpectrum() {
-    const p = peakAbs();
-    for (let i = 0; i < N; i++) { re[i] = sample(i / FS) / p * hann[i]; im[i] = 0; }
-    fft(re, im);
-    const ref = N / 4; // a unit sine through a Hann window peaks at N/4
-    for (let k = 0; k < N / 2; k++) db[k] = 20 * Math.log10(Math.hypot(re[k], im[k]) / ref + 1e-9);
-  }
-  const SF_LO = 20, SF_HI = 20000, DB_LO = -70;
-  let specGeom = null, hoverF = null;
+
+  // ================= spectrum =================
+  let specMode = 'db', specGeom = null, specHover = null;
+  const SF_LO = 20, SF_HI = 20000, DB_LO = -60;
+  onSeg('specMode', v => { specMode = v; setSeg('specMode', v); dirty = true; });
   function drawSpec() {
     const { g, w, h } = fit($('spec'));
     g.clearRect(0, 0, w, h);
-    const pad = { l: 34, r: 10, t: 10, b: 22 }, pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+    const pad = { l: 38, r: 12, t: 12, b: 24 }, pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
     const fx = f => pad.l + pw * Math.log(f / SF_LO) / Math.log(SF_HI / SF_LO);
-    const xf = x => SF_LO * Math.pow(SF_HI / SF_LO, (x - pad.l) / pw);
-    const dy = d => pad.t + ph * (Math.min(0, Math.max(DB_LO, d)) / DB_LO);
-    specGeom = { pad, pw, ph, xf, fx };
-    g.strokeStyle = css('--grid'); g.lineWidth = 1; g.fillStyle = css('--muted'); g.font = MONO();
+    const ya = a => specMode === 'db' ? pad.t + ph * clamp(20 * Math.log10(a + 1e-9), DB_LO, 0) / DB_LO : pad.t + ph * (1 - a);
+    g.strokeStyle = css('--grid'); g.lineWidth = 1; g.fillStyle = css('--muted'); g.font = MONO(); g.textBaseline = 'top';
     const ticks = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
-    g.textBaseline = 'top';
     ticks.forEach((f, i) => {
       const x = fx(f); g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke();
+      if (pw < 360 && (i % 3 === 1 || i % 3 === 2) && i !== ticks.length - 1) return;
       g.textAlign = i === 0 ? 'left' : i === ticks.length - 1 ? 'right' : 'center';
       g.fillText(f >= 1000 ? f / 1000 + 'k' : f, x, pad.t + ph + 6);
     });
     g.textAlign = 'right'; g.textBaseline = 'middle';
-    for (let d = 0; d >= DB_LO; d -= 10) {
-      const y = dy(d); g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + pw, y); g.stroke();
-      if (d % 20 === 0) g.fillText(d, pad.l - 6, y);
-    }
-    // one column per pixel: loudest bin inside that pixel's frequency range
-    const pts = [];
-    for (let x = 0; x <= pw; x++) {
-      const fa = xf(pad.l + x), fb = xf(pad.l + x + 1);
-      let lo = Math.floor(fa / DF), hi = Math.max(lo, Math.floor(fb / DF)), m = -200;
-      for (let k = lo; k <= hi && k < db.length; k++) m = Math.max(m, db[k]);
-      pts.push([pad.l + x, dy(m)]);
-    }
-    g.beginPath(); g.moveTo(pad.l, pad.t + ph);
-    pts.forEach(([x, y]) => g.lineTo(x, y));
-    g.lineTo(pad.l + pw, pad.t + ph); g.closePath();
-    g.fillStyle = css('--trace-dim'); g.fill();
-    g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
-    g.strokeStyle = css('--trace'); g.lineWidth = 1.5; g.stroke();
-    if (hoverF) {
-      const x = fx(hoverF); g.strokeStyle = css('--cool'); g.setLineDash([3, 3]);
-      g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke(); g.setLineDash([]);
+    const ylab = specMode === 'db' ? [0, -20, -40, -60] : [1, 0.75, 0.5, 0.25, 0];
+    ylab.forEach(v => { const y = specMode === 'db' ? pad.t + ph * v / DB_LO : pad.t + ph * (1 - v); g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + pw, y); g.stroke(); if (y < pad.t + ph - 4) g.fillText(v, pad.l - 6, y); });
+    g.save(); g.translate(10, pad.t + ph / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillText(specMode === 'db' ? 'dB' : 'amp', 0, 0); g.restore();
+
+    const stems = [];
+    [['A', css('--a')], ['B', css('--b')]].forEach(([k, col]) => {
+      if (!$('show' + k).checked) return;
+      const fmin = lowest(slots[k]);
+      active(slots[k]).forEach(p => {
+        if (p.f < SF_LO || p.f > SF_HI) return;
+        const x = fx(p.f), y = ya(p.a);
+        stems.push({ k, p, x, y, fmin });
+        g.strokeStyle = col; g.fillStyle = col; g.lineWidth = k === 'A' ? 2 : 1.5;
+        g.beginPath(); g.moveTo(x, pad.t + ph); g.lineTo(x, y); g.stroke();
+        g.beginPath();
+        if (k === 'A') { g.arc(x, y, 3.5, 0, 2 * Math.PI); g.fill(); } else { g.arc(x, y, 5.5, 0, 2 * Math.PI); g.stroke(); }
+      });
+    });
+    specGeom = { pad, pw, stems, xf: x => SF_LO * Math.pow(SF_HI / SF_LO, (x - pad.l) / pw) };
+    if (specHover != null) {
+      g.strokeStyle = css('--accent'); g.setLineDash([3, 3]); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(specHover, pad.t); g.lineTo(specHover, pad.t + ph); g.stroke(); g.setLineDash([]);
     }
   }
   $('spec').addEventListener('pointermove', e => {
     if (!specGeom) return;
-    const r = e.currentTarget.getBoundingClientRect(), x = e.clientX - r.left, { pad, pw } = specGeom;
+    const x = e.clientX - e.currentTarget.getBoundingClientRect().left, { pad, pw, stems } = specGeom;
     if (x < pad.l || x > pad.l + pw) return;
-    hoverF = specGeom.xf(x);
-    const n = Math.round(hoverF / f0);
-    const near = n >= 1 && n <= NH && Math.abs(n * f0 - hoverF) / (n * f0) < 0.03
-      ? ` · near harmonic <b>${n}</b> (${(n * f0).toFixed(1)} Hz, ${amps[n - 1] > 0 ? (20 * Math.log10(amps[n - 1] / Math.max(...amps))).toFixed(1) + ' dB re loudest' : 'off'})` : '';
-    $('specHint').innerHTML = `<b>${hoverF < 1000 ? hoverF.toFixed(1) + ' Hz' : (hoverF / 1000).toFixed(2) + ' kHz'}</b>${near}`;
-    drawSpec();
+    let best = null; stems.forEach(s => { const d = Math.abs(s.x - x); if (d < 9 && (!best || d < best.d)) best = { ...s, d }; });
+    specHover = best ? best.x : x; dirty = true;
+    if (best) {
+      const r = best.p.f / best.fmin, int = Math.abs(r - Math.round(r)) < 0.005;
+      $('specHint').innerHTML = `<span class="k${best.k.toLowerCase()}">${best.k}</span> <b>${fmtF(best.p.f)}</b> (${noteName(best.p.f)}) · amplitude <b>${best.p.a.toFixed(2)}</b> (${(20 * Math.log10(best.p.a)).toFixed(1)} dB) · <b>×${int ? Math.round(r) : r.toFixed(3)}</b> the lowest${int ? ', a whole multiple' : ''}`;
+    } else $('specHint').innerHTML = `<b>${fmtF(specGeom.xf(x))}</b>`;
   });
-  $('spec').addEventListener('pointerleave', () => { hoverF = null; $('specHint').textContent = 'Hover the spectrum to read a frequency.'; drawSpec(); });
+  $('spec').addEventListener('pointerleave', () => { specHover = null; dirty = true; $('specHint').textContent = 'Hover a line to read its frequency and ratio to the lowest one.'; });
 
-  // ---------- harmonic bars ----------
-  let sel = 0, harmGeom = null;
-  function drawHarm() {
-    const { g, w, h } = fit($('harm'));
+  // ================= gesture synth =================
+  // normalized params: uf (0–1 → 55–1760 Hz, log), n (1–32), b (0–1 brightness), s (0–1 stretch)
+  const G = { uf: 0.4, n: 8, b: 0.6, s: 0 }, Gt = { ...G };
+  let src = 'off', gTarget = 'A', engaged = false, gSig = '', shake = 0, baseS = 0, padDirty = true, trail = [];
+  const MAPS = {
+    off: 'Move the sliders. They write a <b>harmonic series</b> into the chosen sound, replacing its list.',
+    pad: '<b>Left ↔ right</b>: fundamental. <b>Down ↕ up</b>: number of harmonics. <b>Scroll / wheel</b>: brightness.',
+    tilt: '<b>Tilt left ↔ right</b>: fundamental. <b>Tilt the top toward you</b>: more harmonics. <b>Shake</b>: a burst of stretch (bell-like).',
+    camera: '<b>Right hand height</b>: fundamental. <b>Left hand height</b>: number of harmonics. <b>Hands far apart</b>: brighter. <b>Tilt your head</b>: stretch.',
+  };
+  const gStatus = t => { $('gStatus').textContent = t; };
+  function gF0() {
+    let f = F_LO * Math.pow(F_SPAN, G.uf);
+    if ($('gSnap').checked) f = 440 * Math.pow(2, Math.round(12 * Math.log2(f / 440)) / 12);
+    return f;
+  }
+  function gReadouts() {
+    const f0 = gF0();
+    $('gF0o').innerHTML = `${f0 < 100 ? f0.toFixed(1) : Math.round(f0)} Hz<small>${noteName(f0).split(' ')[0]}</small>`;
+    $('gNo').textContent = Math.round(G.n);
+    $('gBo').textContent = '1/n' + (2.5 * (1 - G.b) === 0 ? '⁰' : '^' + (2.5 * (1 - G.b)).toFixed(1));
+    $('gSo').textContent = G.s < 0.005 ? 'none' : '+' + (25 * G.s).toFixed(1) + '%';
+  }
+  function gApply() {
+    gReadouts();
+    if (!engaged) return;
+    const f0 = gF0(), N = Math.round(G.n), p = 2.5 * (1 - G.b), s = 0.25 * G.s;
+    const sig = [f0.toFixed(2), N, p.toFixed(3), s.toFixed(4), gTarget].join();
+    if (sig === gSig) return; gSig = sig;
+    const P = [];
+    for (let k = 1; k <= N; k++) { const f = f0 * Math.pow(k, 1 + s); if (f >= 20000) break; P.push({ f: +f.toFixed(2), a: +(1 / Math.pow(k, p)).toFixed(3), on: true }); }
+    slots[gTarget] = P; listDirty[gTarget] = true; changed(gTarget);
+    if (!on && src !== 'off') gStatus('Sound is off. Press “Sound off” at the top to hear it.');
+  }
+  function syncGSliders() { $('gF0').value = G.uf * 1000; $('gN').value = Math.round(G.n); $('gB').value = G.b * 100; $('gS').value = G.s * 100; }
+  [['gF0', 'uf', v => v / 1000], ['gN', 'n', v => v], ['gB', 'b', v => v / 100], ['gS', 's', v => v / 100]].forEach(([id, key, conv]) => {
+    $(id).addEventListener('input', e => { G[key] = Gt[key] = conv(+e.target.value); if (key === 's') { baseS = G.s; shake = 0; } engaged = true; padDirty = true; gApply(); });
+  });
+  $('gSnap').addEventListener('change', () => { engaged = true; gApply(); });
+  onSeg('gTarget', v => { gTarget = v; setSeg('gTarget', v); engaged = true; gSig = ''; gApply(); });
+  function gStep() {
+    if (shake > 0.002) { shake *= 0.95; Gt.s = clamp(baseS + shake, 0, 1); } else if (shake) { shake = 0; Gt.s = baseS; }
+    let moving = false;
+    for (const k in G) { const d = Gt[k] - G[k]; if (Math.abs(d) > 1e-3) { G[k] += d * 0.25; moving = true; } else if (d) { G[k] = Gt[k]; moving = true; } }
+    fastDraw = moving;
+    if (moving) { syncGSliders(); gApply(); padDirty = true; }
+  }
+
+  function pickSrc(v) {
+    if (src === 'camera') stopCam();
+    if (src === 'tilt') stopTilt();
+    src = v; setSeg('gSrc', v);
+    $('stage').dataset.mode = v; $('gMap').innerHTML = MAPS[v]; gStatus(''); padDirty = true; trail = [];
+    if (v === 'tilt') startTilt();
+    if (v === 'camera') startCam();
+  }
+  onSeg('gSrc', pickSrc);
+
+  // ---- touch pad ----
+  let padDown = false;
+  function padSet(e) {
+    const r = $('pad').getBoundingClientRect();
+    const u = clamp((e.clientX - r.left) / r.width, 0, 1), v = clamp((e.clientY - r.top) / r.height, 0, 1);
+    Gt.uf = u; Gt.n = 1 + Math.round((1 - v) * 31); engaged = true;
+    trail.push([u, v, performance.now()]);
+  }
+  $('pad').addEventListener('pointerdown', e => { if (src !== 'pad') pickSrc('pad'); padDown = true; $('pad').setPointerCapture(e.pointerId); padSet(e); });
+  $('pad').addEventListener('pointermove', e => { if (padDown) padSet(e); });
+  $('pad').addEventListener('pointerup', () => { padDown = false; });
+  $('pad').addEventListener('pointercancel', () => { padDown = false; });
+  $('pad').addEventListener('wheel', e => { if (src !== 'pad') return; e.preventDefault(); Gt.b = clamp(Gt.b - e.deltaY * 0.0012, 0, 1); engaged = true; }, { passive: false });
+  function drawPad() {
+    padDirty = false;
+    const { g, w, h } = fit($('pad'));
     g.clearRect(0, 0, w, h);
-    const pad = { l: 8, r: 8, t: 8, b: 22 }, pw = w - pad.l - pad.r, ph = h - pad.t - pad.b, bw = pw / NH;
-    harmGeom = { pad, pw, ph, bw };
-    g.font = MONO(); g.textAlign = 'center'; g.textBaseline = 'top';
-    for (let i = 0; i < NH; i++) {
-      const x = pad.l + i * bw, inaud = (i + 1) * f0 > 20000;
-      g.fillStyle = css('--grid'); g.globalAlpha = i % 2 ? 0.35 : 0.6;
-      g.fillRect(x + 1, pad.t, bw - 2, ph); g.globalAlpha = 1;
-      const bh = amps[i] * ph;
-      g.fillStyle = inaud ? css('--muted') : css('--trace'); g.globalAlpha = inaud ? 0.4 : 1;
-      g.fillRect(x + 1, pad.t + ph - bh, bw - 2, bh); g.globalAlpha = 1;
-      if (i === sel && document.activeElement === $('harm')) { g.strokeStyle = css('--cool'); g.lineWidth = 2; g.strokeRect(x + 1, pad.t, bw - 2, ph); }
-      const n = i + 1;
-      if (n === 1 || n % 5 === 0 || bw > 24) { g.fillStyle = css('--muted'); g.fillText(n, x + bw / 2, pad.t + ph + 6); }
+    g.strokeStyle = css('--grid'); g.fillStyle = css('--muted'); g.font = MONO(); g.lineWidth = 1;
+    for (let o = 0; o <= 5; o++) {
+      const x = o / 5 * w; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke();
+      g.textAlign = o === 0 ? 'left' : o === 5 ? 'right' : 'center'; g.textBaseline = 'bottom';
+      g.fillText(`A${o + 1}`, clamp(x, 4, w - 4), h - 4);
     }
-  }
-  function describe(i) {
-    const f = (i + 1) * f0;
-    $('harmHint').innerHTML = `Harmonic <b>${i + 1}</b> · <b>${f < 1000 ? f.toFixed(1) + ' Hz' : (f / 1000).toFixed(2) + ' kHz'}</b> · amplitude <b>${amps[i].toFixed(2)}</b>${f > 20000 ? ' · above hearing range' : ''}`;
-  }
-  let drawing = false, last = null;
-  function setFromPointer(e) {
-    const r = $('harm').getBoundingClientRect(), { pad, ph, bw } = harmGeom;
-    const x = e.clientX - r.left, y = e.clientY - r.top;
-    const i = Math.max(0, Math.min(NH - 1, Math.floor((x - pad.l) / bw)));
-    const a = Math.max(0, Math.min(1, (pad.t + ph - y) / ph));
-    // fill in bars skipped by a fast drag
-    if (last && last.i !== i) {
-      const step = i > last.i ? 1 : -1;
-      for (let k = last.i + step; k !== i; k += step) amps[k] = last.a + (a - last.a) * (k - last.i) / (i - last.i);
+    [1, 8, 16, 24, 32].forEach(n => {
+      const y = (1 - (n - 1) / 31) * h; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke();
+      if (n === 1) return;
+      g.textAlign = 'left'; g.textBaseline = n === 32 ? 'top' : 'bottom'; g.fillText(n === 32 ? '32 harmonics' : n, 4, n === 32 ? y + 3 : y - 3);
+    });
+    const now = performance.now(); trail = trail.filter(p => now - p[2] < 900);
+    g.fillStyle = css('--a');
+    trail.forEach(p => { g.globalAlpha = 0.35 * (1 - (now - p[2]) / 900); g.beginPath(); g.arc(p[0] * w, p[1] * h, 4, 0, 2 * Math.PI); g.fill(); });
+    g.globalAlpha = 1;
+    const x = G.uf * w, y = (1 - (G.n - 1) / 31) * h, r = 6 + G.b * 14;
+    g.strokeStyle = css('--a'); g.lineWidth = 2; g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.fill();
+    if (src === 'off' || src === 'tilt') {
+      g.fillStyle = css('--muted'); g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `13px ${css('--font-body')}`;
+      g.fillText(src === 'off' ? 'Touch or drag here to play' : 'Tilt your phone', w / 2, h / 2 - 40);
     }
-    amps[i] = a < 0.02 ? 0 : a; last = { i, a }; sel = i; describe(i); changed();
+    if (trail.length) padDirty = true;
   }
-  $('harm').addEventListener('pointerdown', e => { drawing = true; last = null; $('harm').setPointerCapture(e.pointerId); setFromPointer(e); });
-  $('harm').addEventListener('pointermove', e => {
-    if (drawing) return setFromPointer(e);
-    if (!harmGeom) return;
-    const r = $('harm').getBoundingClientRect(), i = Math.floor((e.clientX - r.left - harmGeom.pad.l) / harmGeom.bw);
-    if (i >= 0 && i < NH) describe(i);
-  });
-  $('harm').addEventListener('pointerup', () => { drawing = false; last = null; });
-  $('harm').addEventListener('keydown', e => {
-    const k = e.key;
-    if (k === 'ArrowLeft') sel = Math.max(0, sel - 1);
-    else if (k === 'ArrowRight') sel = Math.min(NH - 1, sel + 1);
-    else if (k === 'ArrowUp') amps[sel] = Math.min(1, +(amps[sel] + 0.05).toFixed(2));
-    else if (k === 'ArrowDown') amps[sel] = Math.max(0, +(amps[sel] - 0.05).toFixed(2));
-    else return;
-    e.preventDefault(); describe(sel); changed();
-  });
-  $('harm').addEventListener('focus', drawHarm);
-  $('harm').addEventListener('blur', drawHarm);
-  document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
 
-  // ---------- update loop ----------
-  let pending = false;
-  function changed() {
-    $('f0Out').innerHTML = `${f0 < 1000 ? f0.toFixed(1) : Math.round(f0)} Hz<small>${noteName(f0)}</small>`;
-    updateAudio();
-    if (pending) return; pending = true;
-    requestAnimationFrame(() => { pending = false; computeSpectrum(); drawAll(); });
+  // ---- tilt / accelerometer ----
+  let tiltSeen = false;
+  function onOri(e) {
+    if (e.gamma == null) return;
+    tiltSeen = true; engaged = true;
+    Gt.uf = clamp((e.gamma + 40) / 80, 0, 1);
+    Gt.n = 1 + Math.round(clamp((e.beta - 5) / 70, 0, 1) * 31);
+    trail.push([Gt.uf, 1 - (Gt.n - 1) / 31, performance.now()]);
   }
-  function drawAll() { drawWave(); drawSpec(); drawHarm(); }
-  new ResizeObserver(() => drawAll()).observe(document.querySelector('.wrap'));
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawAll);
-  new MutationObserver(drawAll).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  document.fonts && document.fonts.ready.then(drawAll);
+  function onMot(e) {
+    const a = e.acceleration && e.acceleration.x != null ? Math.hypot(e.acceleration.x, e.acceleration.y, e.acceleration.z)
+      : e.accelerationIncludingGravity ? Math.abs(Math.hypot(e.accelerationIncludingGravity.x, e.accelerationIncludingGravity.y, e.accelerationIncludingGravity.z) - 9.81) : 0;
+    if (a > 10) { shake = Math.min(1, shake + 0.35); engaged = true; }
+  }
+  async function startTilt() {
+    const DOE = window.DeviceOrientationEvent;
+    if (!DOE) { gStatus('This device has no tilt sensor. Try it on a phone.'); return; }
+    if (typeof DOE.requestPermission === 'function') {
+      try {
+        if (await DOE.requestPermission() !== 'granted') throw new Error('denied');
+        if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') await DeviceMotionEvent.requestPermission();
+      } catch (err) { gStatus('Motion access was not allowed.'); return; }
+    }
+    if (src !== 'tilt') return;
+    baseS = G.s; tiltSeen = false;
+    addEventListener('deviceorientation', onOri); addEventListener('devicemotion', onMot);
+    gStatus('Tilt your phone…');
+    setTimeout(() => { if (src === 'tilt') gStatus(tiltSeen ? '' : 'No tilt data is arriving. Open this page on a phone, over https.'); }, 1500);
+  }
+  function stopTilt() { removeEventListener('deviceorientation', onOri); removeEventListener('devicemotion', onMot); shake = 0; Gt.s = baseS; }
 
-  applyPreset('saw');
+  // ---- camera: body pose (MediaPipe), falling back to motion tracking ----
+  let stream = null, pose = null, camMode = 'motion', camToken = 0, lastVT = -1, mPrev = null;
+  const mCan = document.createElement('canvas'); mCan.width = 64; mCan.height = 48;
+  async function loadPose() {
+    const V = await import(MP + '/vision_bundle.mjs');
+    const fs = await V.FilesetResolver.forVisionTasks(MP + '/wasm');
+    const opts = d => ({ baseOptions: { modelAssetPath: POSE_MODEL, delegate: d }, runningMode: 'VIDEO', numPoses: 1 });
+    try { return await V.PoseLandmarker.createFromOptions(fs, opts('GPU')); }
+    catch (err) { return await V.PoseLandmarker.createFromOptions(fs, opts('CPU')); }
+  }
+  async function startCam() {
+    const token = ++camToken, v = $('cam');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { gStatus('The camera needs a secure (https) page and a browser that supports it.'); return; }
+    gStatus('Asking for the camera…');
+    try { stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }, audio: false }); }
+    catch (err) { if (token === camToken) gStatus('Camera not available: ' + err.message); return; }
+    if (token !== camToken || src !== 'camera') { stream.getTracks().forEach(t => t.stop()); stream = null; return; }
+    v.srcObject = stream; await v.play().catch(() => {});
+    mPrev = null; camMode = 'motion'; requestAnimationFrame(() => camLoop(token));
+    if (!pose) {
+      gStatus('Camera on. Loading the body tracker (a few MB, once)… meanwhile, wave a hand.');
+      try { pose = await loadPose(); }
+      catch (err) { console.warn(err); if (token === camToken) gStatus('The body tracker could not load, so this follows motion instead: move left/right for pitch, up/down for harmonics.'); return; }
+    }
+    if (token === camToken) { camMode = 'pose'; gStatus('Tracking your body. Step back so your shoulders and both hands are in view.'); }
+  }
+  function stopCam() {
+    camToken++;
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null; $('cam').srcObject = null;
+    const ov = $('ov'); ov.getContext('2d').clearRect(0, 0, ov.width, ov.height);
+  }
+  function camLoop(token) {
+    if (token !== camToken || !stream) return;
+    const v = $('cam');
+    if (v.readyState >= 2 && v.currentTime !== lastVT) {
+      lastVT = v.currentTime;
+      const ov = $('ov');
+      if (ov.width !== v.videoWidth || ov.height !== v.videoHeight) { ov.width = v.videoWidth; ov.height = v.videoHeight; }
+      try { camMode === 'pose' && pose ? handlePose(pose.detectForVideo(v, performance.now())) : motion(v); }
+      catch (err) { console.warn(err); camMode = 'motion'; }
+    }
+    requestAnimationFrame(() => camLoop(token));
+  }
+  const BONES = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [7, 8]];
+  function handlePose(res) {
+    const ov = $('ov'), g = ov.getContext('2d'), W = ov.width, H = ov.height;
+    g.clearRect(0, 0, W, H);
+    const L = res && res.landmarks && res.landmarks[0];
+    if (!L) { gStatus('No body found. Step back so your shoulders and hands are in view.'); return; }
+    const ok = i => L[i] && (L[i].visibility == null || L[i].visibility > 0.5);
+    g.lineWidth = Math.max(2, W / 160); g.strokeStyle = css('--surface'); g.globalAlpha = 0.8;
+    BONES.forEach(([a, b]) => { if (ok(a) && ok(b)) { g.beginPath(); g.moveTo(L[a].x * W, L[a].y * H); g.lineTo(L[b].x * W, L[b].y * H); g.stroke(); } });
+    g.globalAlpha = 1;
+    [[16, '--a'], [15, '--b']].forEach(([i, c]) => { if (ok(i)) { g.fillStyle = css(c); g.beginPath(); g.arc(L[i].x * W, L[i].y * H, W / 40, 0, 2 * Math.PI); g.fill(); } });
+    if (ok(16)) Gt.uf = clamp((0.85 - L[16].y) / 0.7, 0, 1);
+    if (ok(15)) Gt.n = 1 + Math.round(clamp((0.85 - L[15].y) / 0.7, 0, 1) * 31);
+    if (ok(15) && ok(16) && ok(11) && ok(12)) {
+      const sw = Math.hypot(L[11].x - L[12].x, L[11].y - L[12].y) || 0.1;
+      Gt.b = clamp((Math.hypot(L[15].x - L[16].x, L[15].y - L[16].y) / sw - 0.6) / 3, 0, 1);
+    }
+    if (ok(7) && ok(8)) {
+      const roll = Math.atan(Math.abs((L[7].y - L[8].y) / ((L[7].x - L[8].x) || 1e-6))) * 180 / Math.PI;
+      Gt.s = clamp((roll - 6) / 24, 0, 1);
+    }
+    engaged = true;
+    gStatus(on ? 'Tracking. Right hand (terracotta) sets pitch; left hand (sage) sets harmonics.' : 'Tracking. Sound is off: press “Sound off” at the top to hear it.');
+  }
+  function motion(v) {
+    const g = mCan.getContext('2d', { willReadFrequently: true });
+    g.drawImage(v, 0, 0, 64, 48);
+    const d = g.getImageData(0, 0, 64, 48).data, cur = new Float32Array(64 * 48);
+    for (let i = 0; i < cur.length; i++) cur[i] = (d[4 * i] + d[4 * i + 1] + d[4 * i + 2]) / 3;
+    const ov = $('ov'), og = ov.getContext('2d'); og.clearRect(0, 0, ov.width, ov.height);
+    if (mPrev) {
+      let sx = 0, sy = 0, m = 0;
+      for (let y = 0; y < 48; y++) for (let x = 0; x < 64; x++) {
+        const i = y * 64 + x, df = Math.abs(cur[i] - mPrev[i]);
+        if (df > 25) { sx += x * df; sy += y * df; m += df; }
+      }
+      if (m > 3000) {
+        const cx = sx / m / 63, cy = sy / m / 47;
+        Gt.uf = 1 - cx; Gt.n = 1 + Math.round((1 - cy) * 31); Gt.b = clamp(m / 60000, 0, 1); engaged = true;
+        og.fillStyle = css('--a'); og.globalAlpha = 0.85; og.beginPath(); og.arc(cx * ov.width, cy * ov.height, ov.width / 30, 0, 2 * Math.PI); og.fill(); og.globalAlpha = 1;
+      }
+    }
+    mPrev = cur;
+  }
+
+  // ================= main loop =================
+  let lastT = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+    if (live) { tOff += dt; dirty = true; }
+    gStep();
+    ['A', 'B'].forEach(k => {
+      if (listDirty[k] && !$('slot' + k).contains(document.activeElement) && now - (frame['r' + k] || 0) > 150) { frame['r' + k] = now; renderList(k); }
+    });
+    if (dirty) { dirty = false; drawWave(); drawSpec(); }
+    if (padDirty && src !== 'camera') drawPad();
+    requestAnimationFrame(frame);
+  }
+  const redrawAll = () => { dirty = true; padDirty = true; };
+  new ResizeObserver(redrawAll).observe(document.querySelector('.wrap'));
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawAll);
+  new MutationObserver(redrawAll).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (document.fonts) document.fonts.ready.then(redrawAll);
+
+  // ================= start =================
+  slots.A = harmonicSet(110, 8, 'inv');
+  slots.B = randomSet(8, 110, 880, 'inv');
+  ['A', 'B'].forEach(k => { renderList(k); updateAna(k); });
+  syncGSliders(); gReadouts(); $('gMap').innerHTML = MAPS.off;
+  setWin(0.02); syncAudio();
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
