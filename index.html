@@ -31,6 +31,8 @@
   --a-dim: rgba(166,116,88,.16);
   --b: #5F7775;
   --b-dim: rgba(95,119,117,.18);
+  --v: #4A3428;
+  --v-dim: rgba(74,52,40,.14);
   --accent: #734B34;
   --pill: #3B261A;
   --pill-ink: #F2EEE8;
@@ -56,7 +58,7 @@
   :root:not([data-theme="light"]) {
     --bg: #17120F; --bg-2: #211914; --glass: rgba(210,217,216,.045); --glass-line: rgba(210,217,216,.10);
     --screen: rgba(0,0,0,.22); --solid: #241B16; --grid: rgba(210,217,216,.07); --line: rgba(210,217,216,.14); --track: rgba(210,217,216,.16);
-    --ink: #EDE7DF; --muted: #B3A291; --a: #CF9874; --a-dim: rgba(207,152,116,.2); --b: #D2D9D8; --b-dim: rgba(210,217,216,.16);
+    --ink: #EDE7DF; --muted: #B3A291; --a: #CF9874; --a-dim: rgba(207,152,116,.2); --b: #D2D9D8; --b-dim: rgba(210,217,216,.16); --v: #EFE8DF; --v-dim: rgba(239,232,223,.13);
     --accent: #D9C3A9; --pill: #D2D9D8; --pill-ink: #1E1612; --on-ab: #1E1612; --chip: rgba(210,217,216,.08);
     --hero-sky-1: #2C3335; --hero-sky-2: #4A403A; --hero-ink: #D2D9D8; --dune-1: #5B3D2C; --dune-2: #45301F; --dune-3: #2E2018;
     --hero-glass: rgba(210,217,216,.07); --hero-line: rgba(210,217,216,.18); --hero-track: rgba(210,217,216,.2);
@@ -67,7 +69,7 @@
 :root[data-theme="dark"] {
   --bg: #17120F; --bg-2: #211914; --glass: rgba(210,217,216,.045); --glass-line: rgba(210,217,216,.10);
   --screen: rgba(0,0,0,.22); --solid: #241B16; --grid: rgba(210,217,216,.07); --line: rgba(210,217,216,.14); --track: rgba(210,217,216,.16);
-  --ink: #EDE7DF; --muted: #B3A291; --a: #CF9874; --a-dim: rgba(207,152,116,.2); --b: #D2D9D8; --b-dim: rgba(210,217,216,.16);
+  --ink: #EDE7DF; --muted: #B3A291; --a: #CF9874; --a-dim: rgba(207,152,116,.2); --b: #D2D9D8; --b-dim: rgba(210,217,216,.16); --v: #EFE8DF; --v-dim: rgba(239,232,223,.13);
   --accent: #D9C3A9; --pill: #D2D9D8; --pill-ink: #1E1612; --on-ab: #1E1612; --chip: rgba(210,217,216,.08);
   --hero-sky-1: #2C3335; --hero-sky-2: #4A403A; --hero-ink: #D2D9D8; --dune-1: #5B3D2C; --dune-2: #45301F; --dune-3: #2E2018;
     --hero-glass: rgba(210,217,216,.07); --hero-line: rgba(210,217,216,.18); --hero-track: rgba(210,217,216,.2);
@@ -229,7 +231,26 @@ canvas { display: block; width: 100%; background: var(--screen); border-radius: 
 #spec { height: 260px; border: 1px solid var(--glass-line); }
 .hint { font-size: 12.5px; color: var(--muted); min-height: 1.4em; font-variant-numeric: tabular-nums; }
 .hint b { color: var(--ink); font-weight: 600; }
-.hint .ka { color: var(--a); font-weight: 700; } .hint .kb { color: var(--b); font-weight: 700; }
+.hint .ka { color: var(--a); font-weight: 700; } .hint .kb { color: var(--b); font-weight: 700; } .hint .kv { color: var(--v); font-weight: 700; }
+.chk.v input { accent-color: var(--v); } .chk.v { color: var(--v); font-weight: 600; }
+button:disabled { opacity: .4; cursor: default; }
+button:disabled:hover { border-color: var(--line); }
+.seg button.v[aria-pressed="true"] { background: var(--v); color: var(--solid); }
+
+/* voice */
+.voice { transition: border-color .25s, box-shadow .25s; }
+.voice.sounding { border-color: var(--v); box-shadow: 0 0 0 1px var(--v), var(--shadow); }
+.vrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.vrow .sep { width: 1px; height: 22px; background: var(--line); }
+.meter { width: 96px; height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--v); }
+.vpitch { display: flex; align-items: baseline; gap: 8px; min-width: 190px; }
+.vpitch .big { font: 300 28px/1 var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.vpitch small { color: var(--muted); font-size: 12px; }
+.vlab { font-size: 12.5px; color: var(--muted); display: inline-flex; gap: 8px; align-items: center; }
+.vlab input { padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--screen); width: 130px; font-size: 13px; }
+#recBtn[aria-pressed="true"] { background: var(--a); color: var(--on-ab); border-color: transparent; }
+.vstatus { margin: 0; font-size: 12.5px; color: var(--muted); }
 
 /* gesture */
 .gbody { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; }
@@ -274,6 +295,8 @@ footer b { color: var(--ink); font-weight: 600; }
           <button class="a" data-v="A" aria-pressed="true">A</button>
           <button class="b" data-v="B" aria-pressed="false">B</button>
           <button data-v="alt" aria-pressed="false" title="Switch between A and B every 1.5 s">A⇄B</button>
+          <button class="v" data-v="R" aria-pressed="false" disabled title="Loop your recording">Voice</button>
+          <button data-v="RA" aria-pressed="false" disabled title="Switch between your recording and sound A">Voice⇄A</button>
         </div>
       </div>
       <div class="hgroup"><label class="lbl" for="level">Level</label><input id="level" type="range" min="0" max="100" value="35"><span class="readout" id="levelOut">35%</span></div>
@@ -285,6 +308,30 @@ footer b { color: var(--ink); font-weight: 600; }
       <p class="tag">Type frequencies, hear them, see them, then play them with your body.</p>
     </div>
   </header>
+
+  <section class="panel voice" id="voicePanel">
+    <div class="phead">
+      <h2>Voice</h2><span class="note">record a vowel and see it beside your synthesized sound</span>
+      <div class="tools"><span class="lbl">Headphones help</span></div>
+    </div>
+    <div class="vrow">
+      <button id="micBtn" class="power" aria-pressed="false"><span class="led"></span><span id="micLabel">Microphone off</span></button>
+      <div class="meter" aria-hidden="true"><i id="meterFill"></i></div>
+      <div class="vpitch"><span class="lbl">Pitch</span><span class="big" id="pitchOut">—</span><small id="pitchNote"></small></div>
+      <button id="useF0" disabled title="Copy this pitch into the base of “A frequency and its multiples”">Use as base frequency</button>
+    </div>
+    <div class="vrow">
+      <button id="recBtn" aria-pressed="false">● Record</button>
+      <span class="val" id="recTime">nothing recorded</span>
+      <button id="playRec" disabled>Play recording</button>
+      <span class="sep" aria-hidden="true"></span>
+      <label class="vlab" for="vName">File name <input id="vName" type="text" value="vowel-ah" spellcheck="false"></label>
+      <button id="saveRec" disabled>Save original .wav</button>
+      <button id="saveA">Save A .wav</button>
+      <button id="saveB">Save B .wav</button>
+    </div>
+    <p class="vstatus" id="vStatus" role="status">Turn the microphone on and hold a steady vowel. Your voice shows in the waveform and spectrum below. Record up to 10 s to keep it.</p>
+  </section>
 
   <div class="grid2" id="slots"></div>
 
@@ -340,6 +387,7 @@ footer b { color: var(--ink); font-weight: 600; }
       <div class="tools">
         <label class="chk a"><input type="checkbox" id="showA" checked> A</label>
         <label class="chk b"><input type="checkbox" id="showB" checked> B</label>
+        <label class="chk v"><input type="checkbox" id="showV" checked> Voice</label>
         <button id="live" aria-pressed="false">Scroll in time</button>
       </div>
     </div>
@@ -366,7 +414,7 @@ footer b { color: var(--ink); font-weight: 600; }
         <div class="tools"><div class="seg" id="specMode"><button data-v="db" aria-pressed="true">dB</button><button data-v="lin" aria-pressed="false">Linear</button></div></div>
       </div>
       <canvas id="spec" aria-label="Spectrum of sounds A and B"></canvas>
-      <div class="hint" id="specHint">Hover a line to read its frequency and ratio to the lowest one.</div>
+      <div class="hint" id="specHint">Hover a line to read its frequency. With a voice showing, the hint also reads the voice's level there.</div>
     </section>
 
     <section class="panel">
@@ -406,6 +454,7 @@ footer b { color: var(--ink); font-weight: 600; }
       <li>Look at both at <b>10 ms</b>: A repeats the same shape over and over, while B never quite repeats. At <b>1 s</b> or <b>10 s</b>, B shows a slow, uneven swell (beating) where A is a steady band.</li>
       <li>Type <code>200, 201</code> into a sound and set the window to 10 s: two close frequencies beat once per second.</li>
       <li>Try <b>fundamental removed</b>: B has no energy at the base frequency, but you still hear the same pitch, and its waveform still repeats at the same period.</li>
+      <li>Record a steady “ah”, press <b>Use as base frequency</b>, make 20 multiples, then set each amplitude until A's dots sit on the voice's peaks in the dB spectrum. Compare with <b>Voice⇄A</b>.</li>
       <li>In Gesture, raise <b>Stretch</b> slowly: the harmonics drift off whole-number ratios and the sound turns metallic.</li>
     </ul>
   </footer>
@@ -629,13 +678,30 @@ footer b { color: var(--ink); font-weight: 600; }
   $('cmpMissing').onclick = () => compare(A => A.slice(1).map(p => ({ ...p })));
 
   // ================= audio =================
-  let ctx = null, master = null, bank = [], on = false, level = 0.35, hear = 'A', altCur = 'A', altTimer = null;
-  const heard = () => hear === 'alt' ? altCur : hear;
+  let ctx = null, comp = null, master = null, recGain = null, recSrc = null, bank = [], on = false, level = 0.35, hear = 'A', altCur = 'A', altTimer = null;
+  const heard = () => hear === 'alt' || hear === 'RA' ? altCur : hear;
+  function ensureCtx() {
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    comp = ctx.createDynamicsCompressor(); comp.threshold.value = -8; comp.ratio.value = 6; comp.connect(ctx.destination);
+    master = ctx.createGain(); master.gain.value = 0; master.connect(comp);
+    recGain = ctx.createGain(); recGain.gain.value = 0; recGain.connect(comp);
+  }
+  function recPlay(want) {
+    if (want && !recSrc && rec) {
+      if (!rec.buf) { rec.buf = ctx.createBuffer(1, rec.data.length, rec.sr); rec.buf.copyToChannel(rec.data, 0); }
+      recSrc = ctx.createBufferSource(); recSrc.buffer = rec.buf; recSrc.loop = true; recSrc.connect(recGain); recSrc.start();
+    } else if (!want && recSrc) { const s = recSrc; recSrc = null; s.stop(ctx.currentTime + 0.08); }
+  }
   function syncAudio() {
-    ['A', 'B'].forEach(k => $('slot' + k).classList.toggle('sounding', on && heard() === k));
+    const h = heard();
+    ['A', 'B'].forEach(k => $('slot' + k).classList.toggle('sounding', on && h === k));
+    $('voicePanel').classList.toggle('sounding', on && h === 'R');
     if (!ctx) return;
-    const t = ctx.currentTime, P = active(slots[heard()]), sum = P.reduce((s, p) => s + p.a, 0);
+    const t = ctx.currentTime, P = h === 'R' ? [] : active(slots[h]), sum = P.reduce((s, p) => s + p.a, 0);
     master.gain.setTargetAtTime(on && sum ? level / Math.max(1, sum) : 0, t, 0.03);
+    recGain.gain.setTargetAtTime(on && h === 'R' && rec ? level * 0.9 / rec.peak : 0, t, 0.02);
+    recPlay(on && h === 'R');
     P.forEach((p, i) => {
       let v = bank[i];
       if (!v) {
@@ -648,29 +714,256 @@ footer b { color: var(--ink); font-weight: 600; }
     });
     while (bank.length > P.length) { const v = bank.pop(); v.g.gain.setTargetAtTime(0, t, 0.02); v.o.stop(t + 0.3); }
   }
-  $('power').addEventListener('click', async () => {
-    if (!ctx) {
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -8; comp.ratio.value = 6;
-      master = ctx.createGain(); master.gain.value = 0; master.connect(comp).connect(ctx.destination);
-    }
-    on = !on;
+  async function setOn(v) {
+    ensureCtx(); on = v;
     if (on) await ctx.resume();
     syncAudio();
     $('power').setAttribute('aria-pressed', on);
     $('powerLabel').textContent = on ? 'Sound on' : 'Sound off';
     if (on) gStatus('');
-  });
+  }
+  $('power').addEventListener('click', () => setOn(!on));
   $('level').addEventListener('input', e => { level = e.target.value / 100; $('levelOut').textContent = e.target.value + '%'; syncAudio(); });
   function setHear(v) {
     hear = v; setSeg('hear', v);
     clearInterval(altTimer); altTimer = null;
-    if (v === 'alt') { altCur = 'A'; altTimer = setInterval(() => { altCur = altCur === 'A' ? 'B' : 'A'; syncAudio(); }, 1500); }
+    if (v === 'alt' || v === 'RA') {
+      const pair = v === 'alt' ? ['A', 'B'] : ['R', 'A'], ms = v === 'alt' ? 1500 : clamp(rec ? rec.dur : 1.5, 1.5, 4) * 1000;
+      altCur = pair[0]; altTimer = setInterval(() => { altCur = altCur === pair[0] ? pair[1] : pair[0]; syncAudio(); }, ms);
+    }
     syncAudio();
   }
   onSeg('hear', setHear);
 
   function changed(k) { updateAna(k); syncAudio(); dirty = true; }
+
+  // ================= voice: microphone, recording, pitch, saving =================
+  const REC_MAX = 10, VN = 8192, HANN = new Float32Array(VN);
+  for (let i = 0; i < VN; i++) HANN[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (VN - 1));
+  const fre = new Float64Array(VN), fim = new Float64Array(VN);
+  let mic = null, ring = null, ringW = 0, ringN = 0, micSR = 48000, recording = false, recChunks = [], recLen = 0, rec = null;
+  let livePow = null, liveDb = null, livePitch = 0, liveRms = 0, vFrame = 0;
+  const vStatus = t => { $('vStatus').textContent = t; };
+
+  function fft(re, im) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit;
+      if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const a = i + k, b = a + len / 2, tr = re[b] * cr - im[b] * ci, ti = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+          const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
+        }
+      }
+    }
+  }
+  // add the power spectrum of x[off … off+VN) into acc
+  function powerAcc(x, off, acc, w = 1) {
+    for (let i = 0; i < VN; i++) { fre[i] = x[off + i] * HANN[i]; fim[i] = 0; }
+    fft(fre, fim);
+    for (let k = 0; k < VN / 2; k++) acc[k] += w * (fre[k] * fre[k] + fim[k] * fim[k]);
+  }
+  // dB relative to the loudest bin, so the strongest harmonic sits at 0 dB like an amplitude of 1
+  function toDb(acc) {
+    let m = 0; for (let k = 1; k < acc.length; k++) m = Math.max(m, acc[k]);
+    const out = new Float32Array(acc.length);
+    for (let k = 0; k < acc.length; k++) out[k] = 10 * Math.log10(acc[k] / (m || 1) + 1e-12);
+    return out;
+  }
+  // YIN pitch estimate (60–1000 Hz); 0 when there is no clear period
+  function yin(x, sr) {
+    const maxLag = Math.floor(sr / 60), minLag = Math.floor(sr / 1000), W = x.length - maxLag;
+    if (W < 256) return 0;
+    const d = new Float32Array(maxLag + 2);
+    for (let tau = 1; tau <= maxLag + 1 && tau + W <= x.length; tau++) { let s = 0; for (let i = 0; i < W; i++) { const v = x[i] - x[i + tau]; s += v * v; } d[tau] = s; }
+    let run = 0; d[0] = 1;
+    for (let tau = 1; tau <= maxLag; tau++) { run += d[tau]; d[tau] = run ? d[tau] * tau / run : 1; }
+    let tau = -1;
+    for (let t = minLag; t <= maxLag; t++) if (d[t] < 0.15) { while (t + 1 <= maxLag && d[t + 1] < d[t]) t++; tau = t; break; }
+    if (tau < 2) return 0;
+    const a = d[tau - 1], b = d[tau], c = tau + 1 <= maxLag ? d[tau + 1] : b, den = a - 2 * b + c;
+    return sr / (tau + (den ? 0.5 * (a - c) / den : 0));
+  }
+  const rmsOf = x => { let s = 0; for (let i = 0; i < x.length; i++) s += x[i] * x[i]; return Math.sqrt(s / (x.length || 1)); };
+  function ringLast(n) {
+    n = Math.min(n, ringN);
+    const out = new Float32Array(n), L = ring.length, start = (ringW - n + L) % L, first = Math.min(n, L - start);
+    out.set(ring.subarray(start, start + first)); if (first < n) out.set(ring.subarray(0, n - first), first);
+    return out;
+  }
+
+  async function startMic() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { vStatus('The microphone needs a secure (https) page or a file opened on your computer, in a browser that supports it.'); return; }
+    ensureCtx(); await ctx.resume();
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+    catch (err) { vStatus(`Microphone not available (${err.message}). Allow microphone access for this page, then try again.`); return; }
+    micSR = ctx.sampleRate; ring = new Float32Array(Math.ceil(micSR * WIN_MAX)); ringW = 0; ringN = 0; livePow = null; liveDb = null;
+    const srcN = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(2048, 1, 1), sink = ctx.createGain();
+    sink.gain.value = 0;
+    proc.onaudioprocess = e => {
+      const x = e.inputBuffer.getChannelData(0), L = ring.length;
+      for (let i = 0; i < x.length; i++) { ring[ringW] = x[i]; ringW = (ringW + 1) % L; }
+      ringN = Math.min(L, ringN + x.length);
+      if (recording) { recChunks.push(x.slice()); recLen += x.length; if (recLen >= REC_MAX * micSR) stopRec(); }
+    };
+    srcN.connect(proc); proc.connect(sink); sink.connect(ctx.destination);   // a silent sink keeps the processor running
+    mic = { stream, srcN, proc, sink };
+    voiceUI(); vStatus('Listening. Hold a steady vowel; press Record to keep it.');
+  }
+  function stopMic() {
+    if (recording) stopRec();
+    mic.stream.getTracks().forEach(t => t.stop());
+    mic.proc.onaudioprocess = null; mic.srcN.disconnect(); mic.proc.disconnect(); mic.sink.disconnect();
+    mic = null; livePow = null; liveDb = null; livePitch = 0; liveRms = 0; $('meterFill').style.width = '0';
+    voiceUI(); dirty = true;
+    vStatus(rec ? 'Microphone off. The views now show your recording.' : 'Microphone off.');
+  }
+  async function startRec() {
+    if (!mic) await startMic();
+    if (!mic) return;
+    recChunks = []; recLen = 0; recording = true; voiceUI();
+    vStatus('Recording… hold the vowel steady. Press Stop when done (10 s at most).');
+  }
+  function stopRec() {
+    recording = false;
+    if (recLen < micSR * 0.2) { recChunks = []; voiceUI(); vStatus('That recording was too short. Record at least half a second.'); return; }
+    const data = new Float32Array(recLen); let o = 0;
+    recChunks.forEach(c => { data.set(c, o); o += c.length; }); recChunks = [];
+    if (recSrc) recPlay(false);
+    rec = analyzeRec(data, micSR);
+    voiceUI(); syncAudio(); dirty = true;
+    vStatus(rec.pitch ? `Recorded ${rec.dur.toFixed(1)} s, pitch about ${fmtF(rec.pitch)} (${noteName(rec.pitch)}). Turn the microphone off to study it, or use Voice⇄A to compare.` : `Recorded ${rec.dur.toFixed(1)} s, but no steady pitch was found. Try a louder, steadier vowel.`);
+  }
+  // pitch = median over the loud part; spectrum = average over the loud part
+  function analyzeRec(data, sr) {
+    let peak = 0; for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+    const B = 2048, nb = Math.floor(data.length / B), rms = new Float32Array(nb); let mr = 0;
+    for (let b = 0; b < nb; b++) { rms[b] = rmsOf(data.subarray(b * B, (b + 1) * B)); mr = Math.max(mr, rms[b]); }
+    const loud = b => b >= 0 && b < nb && rms[b] > 0.3 * mr;
+    const ps = [], L = B + Math.ceil(sr / 60) + 2;
+    for (let b = 0; b < nb; b++) if (loud(b) && b * B + L <= data.length) { const f = yin(data.subarray(b * B, b * B + L), sr); if (f) ps.push(f); }
+    ps.sort((x, y) => x - y);
+    const acc = new Float64Array(VN / 2); let nf = 0;
+    for (let off = 0; off + VN <= data.length; off += VN / 2) if (loud(Math.floor((off + VN / 2) / B))) { powerAcc(data, off, acc); nf++; }
+    if (!nf && data.length >= VN) { powerAcc(data, Math.floor((data.length - VN) / 2), acc); nf = 1; }
+    return { data, sr, dur: data.length / sr, peak: peak || 1, pitch: ps.length ? ps[ps.length >> 1] : 0, db: nf ? toDb(acc) : null };
+  }
+  function liveAnalyse() {
+    if (ringN < VN) return;
+    const x = ringLast(VN);
+    liveRms = rmsOf(x.subarray(VN - 2048));
+    $('meterFill').style.width = Math.min(100, liveRms * 600) + '%';
+    const one = new Float64Array(VN / 2); powerAcc(x, 0, one);
+    if (!livePow) livePow = one; else for (let k = 0; k < one.length; k++) livePow[k] = 0.5 * livePow[k] + 0.5 * one[k];
+    liveDb = toDb(livePow);
+    const f = liveRms > 0.01 ? yin(x.subarray(VN - 2048 - Math.ceil(micSR / 60) - 2), micSR) : 0;
+    livePitch = f && livePitch && Math.abs(f / livePitch - 1) < 0.06 ? livePitch * 0.7 + f * 0.3 : f;
+  }
+  const vPitch = () => mic ? livePitch : rec ? rec.pitch : 0;
+  function voiceUI() {
+    $('micBtn').setAttribute('aria-pressed', !!mic); $('micLabel').textContent = mic ? 'Microphone on' : 'Microphone off';
+    $('recBtn').setAttribute('aria-pressed', recording); $('recBtn').textContent = recording ? '■ Stop' : '● Record';
+    $('recTime').textContent = recording ? `${(recLen / micSR).toFixed(1)} s of ${REC_MAX} s` : rec ? `${rec.dur.toFixed(1)} s recorded` : 'nothing recorded';
+    ['playRec', 'saveRec'].forEach(id => { $(id).disabled = !rec; });
+    $('hear').querySelectorAll('[data-v=R],[data-v=RA]').forEach(b => { b.disabled = !rec; });
+    const p = vPitch();
+    $('pitchOut').textContent = p ? fmtF(p) : '—';
+    $('pitchNote').textContent = p ? noteName(p) : mic ? 'no steady pitch' : '';
+    $('useF0').disabled = !p;
+  }
+  // what the waveform shows for the voice: the latest live samples (triggered on a rising zero crossing), or the recording
+  function voiceView() {
+    if (!$('showV').checked) return null;
+    if (mic && ringN) {
+      const n = Math.min(ringN, Math.ceil(winSec * micSR)), search = winSec <= 0.1 ? Math.min(Math.ceil(0.03 * micSR), ringN - n) : 0;
+      const x = ringLast(n + search); let st = search;
+      for (let i = search; i >= 1; i--) if (x[i - 1] < 0 && x[i] >= 0) { st = i; break; }
+      const seg = x.subarray(st, st + n);
+      let pk = 0; for (let i = 0; i < seg.length; i++) pk = Math.max(pk, Math.abs(seg[i]));
+      return { x: seg, sr: micSR, peak: Math.max(pk, 0.05), live: true };
+    }
+    if (rec) {
+      const n = Math.ceil(winSec * rec.sr), off = live ? Math.floor((tOff % rec.dur) * rec.sr) : 0;
+      return { x: rec.data.subarray(off, Math.min(rec.data.length, off + n)), sr: rec.sr, peak: rec.peak, live: false };
+    }
+    return null;
+  }
+  function drawVoice(g, V, pad, pw, ph, mid) {
+    const nFull = Math.ceil(winSec * V.sr), spp = nFull / pw, x = V.x, sc = yZoom * (ph / 2) * 0.92 / V.peak;
+    const Y = v => mid - v * sc;
+    g.strokeStyle = g.fillStyle = css('--v'); g.lineJoin = 'round';
+    if (spp <= 3) {
+      g.lineWidth = 1.5; g.globalAlpha = 0.8; g.beginPath();
+      for (let i = 0; i < x.length; i++) { const px = pad.l + i / nFull * pw, py = Y(x[i]); i ? g.lineTo(px, py) : g.moveTo(px, py); }
+      g.stroke();
+    } else {
+      const cols = Math.min(Math.ceil(pw), Math.ceil(x.length / spp)), mn = new Float32Array(cols), mx = new Float32Array(cols);
+      for (let c = 0; c < cols; c++) {
+        const a = Math.floor(c * spp), b = Math.min(x.length, Math.max(a + 1, Math.floor((c + 1) * spp)));
+        let lo = Infinity, hi = -Infinity;
+        for (let i = a; i < b; i++) { const v = x[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+        mn[c] = lo === Infinity ? 0 : lo; mx[c] = hi === -Infinity ? 0 : hi;
+      }
+      g.globalAlpha = 0.3; g.beginPath();
+      for (let c = 0; c < cols; c++) g.lineTo(pad.l + c + 0.5, Y(mx[c]) - 0.5);
+      for (let c = cols - 1; c >= 0; c--) g.lineTo(pad.l + c + 0.5, Y(mn[c]) + 0.5);
+      g.closePath(); g.fill();
+    }
+    g.globalAlpha = 1;
+  }
+  // loudest voice level (dB) within ±3% of f
+  function voiceDbAt(vd, vsr, f) {
+    const df = vsr / VN, lo = Math.max(1, Math.floor(f * 0.97 / df)), hi = Math.min(vd.length - 1, Math.ceil(f * 1.03 / df));
+    let m = -Infinity; for (let k = lo; k <= hi; k++) m = Math.max(m, vd[k]);
+    return m;
+  }
+
+  // ---- saving ----
+  function wavBlob(data, sr) {
+    const n = data.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const str = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true);
+    v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) { const x = clamp(data[i], -1, 1); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+    return new Blob([buf], { type: 'audio/wav' });
+  }
+  function download(name, blob) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    vStatus(`Saved ${name}.`);
+  }
+  const fname = suffix => ($('vName').value.trim() || 'sound').replace(/[^\w.-]+/g, '-') + suffix;
+  // the synthesized sound, as long as the recording (3 s if none), peak matched to the recording
+  function saveSynth(k) {
+    const P = active(slots[k]);
+    if (!P.length) { vStatus(`Sound ${k} is silent. Add some frequencies first.`); return; }
+    const sr = 48000, n = Math.round((rec ? clamp(rec.dur, 1, REC_MAX) : 3) * sr), out = new Float32Array(n);
+    P.forEach(p => { const w = 2 * Math.PI * p.f / sr; for (let i = 0; i < n; i++) out[i] += p.a * Math.sin(w * i); });
+    let pk = 0; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(out[i]));
+    const g = (rec ? Math.min(rec.peak, 0.95) : 0.8) / (pk || 1), fade = Math.round(0.02 * sr);
+    for (let i = 0; i < n; i++) out[i] *= g * Math.min(1, i / fade, (n - 1 - i) / fade);
+    download(fname(`-synth-${k}.wav`), wavBlob(out, sr));
+  }
+  $('micBtn').onclick = () => mic ? stopMic() : startMic();
+  $('recBtn').onclick = () => recording ? stopRec() : startRec();
+  $('playRec').onclick = () => { if (!on) setOn(true); setHear('R'); };
+  $('saveRec').onclick = () => rec && download(fname('-original.wav'), wavBlob(rec.data, rec.sr));
+  $('saveA').onclick = () => saveSynth('A');
+  $('saveB').onclick = () => saveSynth('B');
+  $('useF0').onclick = () => {
+    const p = vPitch(); if (!p) return;
+    $('hF0').value = +p.toFixed(1); hLabel();
+    vStatus(`Base set to ${fmtF(p)}. Set Count (try 20) and press “Make …” in Generate to fill sound ${genTarget}.`);
+  };
+  $('showV').addEventListener('change', () => dirty = true);
 
   // ================= drawing helpers =================
   function fit(c) {
@@ -746,9 +1039,10 @@ footer b { color: var(--ink); font-weight: 600; }
       }
       return { k, S, col, mn, mx, cols };
     });
-    if (!series.length) {
+    const V = voiceView();
+    if (!series.length && !V) {
       g.fillStyle = css('--muted'); g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText(vis.length ? 'silence: add some frequencies above' : 'tick A or B to show a waveform', w / 2, mid);
+      g.fillText(vis.length ? 'silence: add some frequencies above' : 'tick A, B or Voice to show a waveform', w / 2, mid);
       $('waveHint').textContent = '';
       return;
     }
@@ -760,6 +1054,7 @@ footer b { color: var(--ink); font-weight: 600; }
     const norm = (yFit ? peak : Math.max(...series.map(s => s.S.sum))) || 1;
     const Y = v => mid - v / norm * yZoom * (ph / 2) * 0.92;
     g.save(); g.beginPath(); g.rect(pad.l, pad.t, pw, ph); g.clip();
+    if (V) drawVoice(g, V, pad, pw, ph, mid);
     series.forEach((s, si) => {
       g.strokeStyle = s.col; g.fillStyle = s.col; g.lineJoin = 'round';
       if (s.line) {
@@ -789,7 +1084,9 @@ footer b { color: var(--ink); font-weight: 600; }
       const t = t0 + (waveHoverX - pad.l) / pw * winSec;
       hint.push(`t = <b>${fmtDur(t || 0)}</b>`);
       series.forEach(s => hint.push(`<span class="k${s.k.toLowerCase()}">${s.k}</span> ${val(s.S, t).toFixed(3)}`));
+      if (V) { const i = Math.floor((waveHoverX - pad.l) / pw * winSec * V.sr); if (i < V.x.length) hint.push(`<span class="kv">Voice</span> ${(V.x[i] / V.peak).toFixed(3)}`); }
     } else {
+      if (V) { const p = vPitch(); hint.push(`<span class="kv">Voice</span> ${V.live ? 'live' : 'recording'}, own scale${p ? `, about <b>${fmtF(p)}</b>, repeats every <b>${fmtDur(1 / p)}</b>` : ''}`); }
       series.forEach(s => {
         const r = analyze(slots[s.k]), cyc = r && r.c ? winSec / r.period : 0;
         hint.push(`<span class="k${s.k.toLowerCase()}">${s.k}</span> ` + (r && r.c ? `repeats every <b>${fmtDur(r.period)}</b> (${cyc < 10 ? cyc.toFixed(1) : Math.round(cyc)} repeats in view)` : 'never repeats exactly'));
@@ -821,6 +1118,22 @@ footer b { color: var(--ink); font-weight: 600; }
     const ylab = specMode === 'db' ? [0, -20, -40, -60] : [1, 0.75, 0.5, 0.25, 0];
     ylab.forEach(v => { const y = specMode === 'db' ? pad.t + ph * v / DB_LO : pad.t + ph * (1 - v); g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + pw, y); g.stroke(); if (y < pad.t + ph - 4) g.fillText(v, pad.l - 6, y); });
     g.save(); g.translate(10, pad.t + ph / 2); g.rotate(-Math.PI / 2); g.textAlign = 'center'; g.fillText(specMode === 'db' ? 'dB' : 'amp', 0, 0); g.restore();
+    const xf = x => SF_LO * Math.pow(SF_HI / SF_LO, (x - pad.l) / pw);
+
+    // the voice: a continuous curve, loudest bin per pixel column, 0 dB = its strongest harmonic
+    const vd = $('showV').checked ? (mic ? liveDb : rec && rec.db) : null, vsr = mic ? micSR : rec ? rec.sr : 0;
+    if (vd) {
+      const df = vsr / VN, pts = [];
+      for (let x = 0; x <= pw; x++) {
+        const lo = Math.max(1, Math.floor(xf(pad.l + x) / df)), hi = Math.max(lo, Math.floor(xf(pad.l + x + 1) / df));
+        let m = -200; for (let k = lo; k <= hi && k < vd.length; k++) m = Math.max(m, vd[k]);
+        pts.push([pad.l + x, specMode === 'db' ? pad.t + ph * clamp(m, DB_LO, 0) / DB_LO : pad.t + ph * (1 - Math.pow(10, m / 20))]);
+      }
+      g.beginPath(); g.moveTo(pad.l, pad.t + ph); pts.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(pad.l + pw, pad.t + ph); g.closePath();
+      g.fillStyle = css('--v-dim'); g.fill();
+      g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
+      g.strokeStyle = css('--v'); g.lineWidth = 1.25; g.stroke();
+    }
 
     const stems = [];
     [['A', css('--a')], ['B', css('--b')]].forEach(([k, col]) => {
@@ -836,7 +1149,7 @@ footer b { color: var(--ink); font-weight: 600; }
         if (k === 'A') { g.arc(x, y, 3.5, 0, 2 * Math.PI); g.fill(); } else { g.arc(x, y, 5.5, 0, 2 * Math.PI); g.stroke(); }
       });
     });
-    specGeom = { pad, pw, stems, xf: x => SF_LO * Math.pow(SF_HI / SF_LO, (x - pad.l) / pw) };
+    specGeom = { pad, pw, stems, xf, vd, vsr };
     if (specHover != null) {
       g.strokeStyle = css('--accent'); g.setLineDash([3, 3]); g.lineWidth = 1;
       g.beginPath(); g.moveTo(specHover, pad.t); g.lineTo(specHover, pad.t + ph); g.stroke(); g.setLineDash([]);
@@ -848,12 +1161,14 @@ footer b { color: var(--ink); font-weight: 600; }
     if (x < pad.l || x > pad.l + pw) return;
     let best = null; stems.forEach(s => { const d = Math.abs(s.x - x); if (d < 9 && (!best || d < best.d)) best = { ...s, d }; });
     specHover = best ? best.x : x; dirty = true;
+    const f = best ? best.p.f : specGeom.xf(x), vdb = specGeom.vd ? voiceDbAt(specGeom.vd, specGeom.vsr, f) : null;
+    const vtxt = vdb != null && isFinite(vdb) ? ` · <span class="kv">Voice</span> here <b>${vdb.toFixed(1)} dB</b> (amplitude ${Math.pow(10, vdb / 20).toFixed(2)})` : '';
     if (best) {
       const r = best.p.f / best.fmin, int = Math.abs(r - Math.round(r)) < 0.005;
-      $('specHint').innerHTML = `<span class="k${best.k.toLowerCase()}">${best.k}</span> <b>${fmtF(best.p.f)}</b> (${noteName(best.p.f)}) · amplitude <b>${best.p.a.toFixed(2)}</b> (${(20 * Math.log10(best.p.a)).toFixed(1)} dB) · <b>×${int ? Math.round(r) : r.toFixed(3)}</b> the lowest${int ? ', a whole multiple' : ''}`;
-    } else $('specHint').innerHTML = `<b>${fmtF(specGeom.xf(x))}</b>`;
+      $('specHint').innerHTML = `<span class="k${best.k.toLowerCase()}">${best.k}</span> <b>${fmtF(best.p.f)}</b> (${noteName(best.p.f)}) · amplitude <b>${best.p.a.toFixed(2)}</b> (${(20 * Math.log10(best.p.a)).toFixed(1)} dB) · <b>×${int ? Math.round(r) : r.toFixed(3)}</b> the lowest${int ? ', a whole multiple' : ''}${vtxt}`;
+    } else $('specHint').innerHTML = `<b>${fmtF(f)}</b>${vtxt}`;
   });
-  $('spec').addEventListener('pointerleave', () => { specHover = null; dirty = true; $('specHint').textContent = 'Hover a line to read its frequency and ratio to the lowest one.'; });
+  $('spec').addEventListener('pointerleave', () => { specHover = null; dirty = true; $('specHint').textContent = "Hover a line to read its frequency. With a voice showing, the hint also reads the voice's level there."; });
 
   // ================= gesture synth =================
   // normalized params: uf (0–1 → 55–1760 Hz, log), n (1–32), b (0–1 brightness), s (0–1 stretch)
@@ -1081,6 +1396,10 @@ footer b { color: var(--ink); font-weight: 600; }
     const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
     if (live) { tOff += dt; dirty = true; }
     gStep();
+    if (mic) {
+      fastDraw = true; dirty = true;
+      if (++vFrame % 3 === 0) { liveAnalyse(); voiceUI(); }
+    }
     ['A', 'B'].forEach(k => {
       if (listDirty[k] && !$('slot' + k).contains(document.activeElement) && now - (frame['r' + k] || 0) > 150) { frame['r' + k] = now; renderList(k); }
     });
