@@ -251,6 +251,8 @@ button:disabled:hover { border-color: var(--line); }
 .vlab input { padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--screen); width: 130px; font-size: 13px; }
 #recBtn[aria-pressed="true"] { background: var(--a); color: var(--on-ab); border-color: transparent; }
 .vstatus { margin: 0; font-size: 12.5px; color: var(--muted); }
+.vrow.syn { padding-top: 10px; border-top: 1px solid var(--grid); }
+.vrow.syn input[type=range] { width: 180px; }
 
 /* gesture */
 .gbody { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; }
@@ -329,6 +331,13 @@ footer b { color: var(--ink); font-weight: 600; }
       <button id="saveRec" disabled>Save original .wav</button>
       <button id="saveA">Save A .wav</button>
       <button id="saveB">Save B .wav</button>
+    </div>
+    <div class="vrow syn">
+      <button id="synBtn" class="go" disabled title="Measure the harmonics of your recording and rebuild it in sound A">Synthesize from recording</button>
+      <label class="vlab" for="synShift">Change pitch</label>
+      <input type="range" id="synShift" min="-12" max="12" step="1" value="0" disabled aria-label="Change pitch in semitones">
+      <span class="readout" id="synOut">0 st</span>
+      <label class="chk"><input type="checkbox" id="synNaive" checked> Put a plain copy in B</label>
     </div>
     <p class="vstatus" id="vStatus" role="status">Turn the microphone on and hold a steady vowel. Your voice shows in the waveform and spectrum below. Record up to 10 s to keep it.</p>
   </section>
@@ -838,6 +847,7 @@ footer b { color: var(--ink); font-weight: 600; }
     recChunks.forEach(c => { data.set(c, o); o += c.length; }); recChunks = [];
     if (recSrc) recPlay(false);
     rec = analyzeRec(data, micSR);
+    syn = null; $('synShift').disabled = true; $('synShift').value = 0; fillR($('synShift')); $('synOut').textContent = '0 st';
     voiceUI(); syncAudio(); dirty = true;
     vStatus(rec.pitch ? `Recorded ${rec.dur.toFixed(1)} s, pitch about ${fmtF(rec.pitch)} (${noteName(rec.pitch)}). Turn the microphone off to study it, or use Voice⇄A to compare.` : `Recorded ${rec.dur.toFixed(1)} s, but no steady pitch was found. Try a louder, steadier vowel.`);
   }
@@ -877,6 +887,7 @@ footer b { color: var(--ink); font-weight: 600; }
     $('pitchOut').textContent = p ? fmtF(p) : '—';
     $('pitchNote').textContent = p ? noteName(p) : mic ? 'no steady pitch' : '';
     $('useF0').disabled = !p;
+    $('synBtn').disabled = !(rec && rec.db && rec.pitch);
   }
   // what the waveform shows for the voice: the latest live samples (triggered on a rising zero crossing), or the recording
   function voiceView() {
@@ -952,6 +963,65 @@ footer b { color: var(--ink); font-weight: 600; }
     for (let i = 0; i < n; i++) out[i] *= g * Math.min(1, i / fade, (n - 1 - i) / fade);
     download(fname(`-synth-${k}.wav`), wavBlob(out, sr));
   }
+
+  // ---- automatic synthesis: measure the harmonics, keep the vowel's shape when the pitch changes ----
+  const SYN_FMAX = 8000;
+  let syn = null;   // { f0, H: [{ n, f, db }] } measured from the recording, db relative to the loudest harmonic
+  // loudest point within ±half of c, refined between bins with a parabola
+  function peakNear(db, df, c, half) {
+    const lo = Math.max(1, Math.round((c - half) / df)), hi = Math.min(db.length - 2, Math.round((c + half) / df));
+    if (hi < lo) return null;
+    let k = lo; for (let i = lo + 1; i <= hi; i++) if (db[i] > db[k]) k = i;
+    const a = db[k - 1], b = db[k], c2 = db[k + 1], den = a - 2 * b + c2, d = den ? clamp(0.5 * (a - c2) / den, -0.5, 0.5) : 0;
+    return { f: (k + d) * df, db: b - 0.25 * (a - c2) * d };
+  }
+  function measure(db, sr, f0) {
+    const df = sr / VN, H = [];
+    for (let n = 1; n * f0 < SYN_FMAX && n <= MAXP; n++) { const p = peakNear(db, df, n * f0, 0.25 * f0); if (p) H.push({ n, ...p }); }
+    return H;
+  }
+  function analyseVowel() {
+    let f0 = rec.pitch, H = measure(rec.db, rec.sr, f0);
+    // refine the fundamental from the strong low harmonics: each one says f0 ≈ its frequency ÷ n
+    let sw = 0, sf = 0;
+    H.slice(0, 8).forEach(h => { if (h.db > -30) { const w = Math.pow(10, h.db / 20); sw += w; sf += w * h.f / h.n; } });
+    if (sw) { f0 = sf / sw; H = measure(rec.db, rec.sr, f0); }
+    const top = Math.max(...H.map(h => h.db)); H.forEach(h => { h.db -= top; });
+    return { f0, H };
+  }
+  // the vowel's shape: straight lines (dB over log frequency) through the harmonic peaks, rolling off 12 dB per octave above the last
+  function synEnv(f) {
+    const H = syn.H, last = H[H.length - 1];
+    if (f <= H[0].f) return H[0].db;
+    if (f >= last.f) return last.db - 12 * Math.log2(f / last.f);
+    let i = 1; while (H[i].f < f) i++;
+    const a = H[i - 1], b = H[i], u = Math.log(f / a.f) / Math.log(b.f / a.f);
+    return a.db + u * (b.db - a.db);
+  }
+  // A: harmonics of the new pitch, loudness read off the shape · B: each harmonic keeps its measured loudness by number
+  function synBuild() {
+    const st = +$('synShift').value, f1 = syn.f0 * Math.pow(2, st / 12), A = [], B = [];
+    for (let n = 1; n * f1 < Math.min(SYN_FMAX, NYQ) && n <= MAXP; n++) {
+      const d = synEnv(n * f1);
+      if (d > -50) A.push({ f: +(n * f1).toFixed(2), a: Math.pow(10, d / 20), on: true });
+      const h = syn.H.find(x => x.n === n);
+      if (h && h.db > -50) B.push({ f: +(n * f1).toFixed(2), a: +Math.pow(10, h.db / 20).toFixed(3), on: true });
+    }
+    const m = Math.max(...A.map(p => p.a), 1e-9); A.forEach(p => { p.a = +(p.a / m).toFixed(3); });
+    setSlot('A', A);
+    if ($('synNaive').checked) setSlot('B', B);
+    $('synOut').textContent = `${st > 0 ? '+' : ''}${st} st · ${fmtF(f1)}`;
+    dirty = true;
+  }
+  $('synBtn').onclick = () => {
+    if (!rec || !rec.db || !rec.pitch) { vStatus('Record a steady vowel first. The app needs a clear pitch to find the harmonics.'); return; }
+    syn = analyseVowel();
+    $('synShift').value = 0; $('synShift').disabled = false; fillR($('synShift'));
+    synBuild(); setHear('RA');
+    vStatus(`Sound A now holds ${slots.A.length} harmonics measured from your voice at ${fmtF(syn.f0)}; the dashed line in the spectrum is your vowel's shape. Listening switches to Voice⇄A. Move Change pitch: A follows the shape, B copies each harmonic's loudness by number. Compare them with A⇄B.`);
+  };
+  $('synShift').addEventListener('input', () => { if (syn) synBuild(); });
+  $('synNaive').addEventListener('change', () => { if (syn) synBuild(); });
   $('micBtn').onclick = () => mic ? stopMic() : startMic();
   $('recBtn').onclick = () => recording ? stopRec() : startRec();
   $('playRec').onclick = () => { if (!on) setOn(true); setHear('R'); };
@@ -1133,6 +1203,15 @@ footer b { color: var(--ink); font-weight: 600; }
       g.fillStyle = css('--v-dim'); g.fill();
       g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
       g.strokeStyle = css('--v'); g.lineWidth = 1.25; g.stroke();
+    }
+    if (syn && $('showV').checked) {
+      g.beginPath(); let started = false;
+      for (let x = 0; x <= pw; x++) {
+        const f = xf(pad.l + x); if (f < syn.H[0].f * 0.7 || f > SYN_FMAX) continue;
+        const m = synEnv(f), y = specMode === 'db' ? pad.t + ph * clamp(m, DB_LO, 0) / DB_LO : pad.t + ph * (1 - Math.pow(10, m / 20));
+        started ? g.lineTo(pad.l + x, y) : g.moveTo(pad.l + x, y); started = true;
+      }
+      g.setLineDash([5, 4]); g.strokeStyle = css('--accent'); g.lineWidth = 1.5; g.stroke(); g.setLineDash([]);
     }
 
     const stems = [];
