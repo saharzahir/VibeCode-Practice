@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Morph Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a rounded dune "horizon" hero holding the transport controls, then glass panels on a soft sand ground.
+   Palette from the dune swatches: sky haze #D2D9D8, sand #D9C3A9, dune #BF9B7A, clay #A67458, umber #734B34. */
+:root {
+  --sky: #D2D9D8;
+  --sand: #D9C3A9;
+  --dune: #BF9B7A;
+  --clay: #A67458;
+  --umber: #734B34;
+
+  --bg: #F2EEE8;
+  --bg-2: #E6E2DA;
+  --glass: rgba(255,255,255,.62);
+  --glass-line: rgba(115,75,52,.12);
+  --screen: rgba(255,255,255,.72);
+  --solid: #FBF9F6;
+  --grid: rgba(115,75,52,.09);
+  --line: rgba(115,75,52,.18);
+  --track: rgba(115,75,52,.16);
+  --ink: #3B261A;
+  --muted: #7A5A46;
+  --a: #A67458;
+  --a-dim: rgba(166,116,88,.16);
+  --b: #5F7775;
+  --b-dim: rgba(95,119,117,.18);
+  --v: #4A3428;
+  --s1: #A67458; --s2: #5F7775; --s3: #8A5A32; --s4: #6F7A45; --s5: #A8822F; --s6: #6B5B73; --s7: #4A6A86; --s8: #9C4F3A;
+  --v-dim: rgba(74,52,40,.14);
+  --accent: #734B34;
+  --pill: #3B261A;
+  --pill-ink: #F2EEE8;
+  --on-ab: #FFFFFF;
+  --chip: rgba(115,75,52,.08);
+  --hero-sky-1: #D2D9D8;
+  --hero-sky-2: #E4DED4;
+  --hero-ink: #4A2F20;
+  --dune-1: #D9C3A9;
+  --dune-2: #BF9B7A;
+  --dune-3: #A67458;
+  --hero-glass: rgba(255,255,255,.38);
+  --hero-line: rgba(59,38,26,.14);
+  --hero-track: rgba(59,38,26,.18);
+  --shadow: 0 1px 2px rgba(59,38,26,.04), 0 12px 32px -18px rgba(59,38,26,.22);
+
+  --font-display: "Jost", "Futura", "Century Gothic", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17120F; --bg-2: #211914; --glass: rgba(210,217,216,.045); --glass-line: rgba(210,217,216,.10);
+    --screen: rgba(0,0,0,.22); --solid: #241B16; --grid: rgba(210,217,216,.07); --line: rgba(210,217,216,.14); --track: rgba(210,217,216,.16);
+    --ink: #EDE7DF; --muted: #B3A291; --a: #CF9874; --a-dim: rgba(207,152,116,.2); --b: #D2D9D8; --b-dim: rgba(210,217,216,.16); --v: #EFE8DF; --v-dim: rgba(239,232,223,.13); --s1: #D69B78; --s2: #B7C9C6; --s3: #D9B48A; --s4: #B9C48B; --s5: #E2BE6E; --s6: #C1B0C9; --s7: #9DBAD3; --s8: #E08D74;
+    --accent: #D9C3A9; --pill: #D2D9D8; --pill-ink: #1E1612; --on-ab: #1E1612; --chip: rgba(210,217,216,.08);
+    --hero-sky-1: #2C3335; --hero-sky-2: #4A403A; --hero-ink: #D2D9D8; --dune-1: #5B3D2C; --dune-2: #45301F; --dune-3: #2E2018;
+    --hero-glass: rgba(210,217,216,.07); --hero-line: rgba(210,217,216,.18); --hero-track: rgba(210,217,216,.2);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 18px 40px -24px rgba(0,0,0,.8);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17120F; --bg-2: #211914; --glass: rgba(210,217,216,.045); --glass-line: rgba(210,217,216,.10);
+  --screen: rgba(0,0,0,.22); --solid: #241B16; --grid: rgba(210,217,216,.07); --line: rgba(210,217,216,.14); --track: rgba(210,217,216,.16);
+  --ink: #EDE7DF; --muted: #B3A291; --a: #CF9874; --a-dim: rgba(207,152,116,.2); --b: #D2D9D8; --b-dim: rgba(210,217,216,.16); --v: #EFE8DF; --v-dim: rgba(239,232,223,.13); --s1: #D69B78; --s2: #B7C9C6; --s3: #D9B48A; --s4: #B9C48B; --s5: #E2BE6E; --s6: #C1B0C9; --s7: #9DBAD3; --s8: #E08D74;
+  --accent: #D9C3A9; --pill: #D2D9D8; --pill-ink: #1E1612; --on-ab: #1E1612; --chip: rgba(210,217,216,.08);
+  --hero-sky-1: #2C3335; --hero-sky-2: #4A403A; --hero-ink: #D2D9D8; --dune-1: #5B3D2C; --dune-2: #45301F; --dune-3: #2E2018;
+    --hero-glass: rgba(210,217,216,.07); --hero-line: rgba(210,217,216,.18); --hero-track: rgba(210,217,216,.2);
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 18px 40px -24px rgba(0,0,0,.8);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg) linear-gradient(180deg, var(--bg-2), var(--bg) 520px) no-repeat;
+  color: var(--ink);
+  font: 400 15px/1.5 var(--font-body);
+  padding-inline: 16px; padding-block: 16px 40px;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1360px; margin: 0 auto; display: grid; gap: 16px; }
+code { font: 500 .92em var(--font-data); background: var(--chip); padding: 1px 5px; border-radius: 5px; }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative; overflow: hidden; border-radius: 22px;
+  background: linear-gradient(180deg, var(--hero-sky-1) 0%, var(--hero-sky-2) 78%);
+  padding: 18px 22px 0; display: grid; gap: 8px; min-height: 300px; align-content: start;
+  box-shadow: var(--shadow);
+}
+.dunes { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 46%; display: block; }
+.dunes .d1 { fill: var(--dune-1); } .dunes .d2 { fill: var(--dune-2); } .dunes .d3 { fill: var(--dune-3); }
+.topbar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--hero-ink); font: 500 12px/1 var(--font-display); letter-spacing: .28em; text-transform: uppercase; }
+.brand svg { width: 38px; height: 18px; }
+.brand svg circle { fill: none; stroke: currentColor; stroke-width: 1.3; }
+.spacer { flex: 1; }
+.herotext { position: relative; padding: 26px 4px 120px; display: grid; gap: 4px; justify-items: center; text-align: center; color: var(--hero-ink); }
+.herotext h1 { margin: 0; font: 300 clamp(44px, 9vw, 104px)/.95 var(--font-display); letter-spacing: .16em; text-indent: .16em; text-wrap: balance; }
+.herotext .kicker { margin: 0; font: 400 clamp(13px, 1.6vw, 17px)/1 var(--font-display); letter-spacing: .62em; text-indent: .62em; text-transform: uppercase; }
+.herotext .tag { margin: 14px 0 0; font-size: 14px; max-width: 46ch; opacity: .85; }
+.topbar .lbl { color: var(--hero-ink); opacity: .75; }
+.topbar .readout { color: var(--hero-ink); }
+
+.lbl { font: 500 10.5px/1 var(--font-display); text-transform: uppercase; letter-spacing: .2em; color: var(--muted); white-space: nowrap; }
+.sub { color: var(--muted); font-size: 13px; }
+
+/* ---------- controls ---------- */
+button, select, input { font: inherit; color: inherit; }
+button {
+  font: 500 12.5px/1 var(--font-body); color: var(--ink); letter-spacing: .01em;
+  background: var(--glass); border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 14px; cursor: pointer; transition: background .15s, border-color .15s, color .15s;
+}
+button:hover { border-color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.power { display: inline-flex; align-items: center; gap: 9px; font: 500 11px/1 var(--font-display); letter-spacing: .2em; text-transform: uppercase; background: var(--pill); color: var(--pill-ink); border-color: transparent; padding: 10px 16px; }
+button.power .led { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .35; }
+button.power[aria-pressed="true"] .led { opacity: 1; background: var(--a); box-shadow: 0 0 0 3px var(--a-dim), 0 0 10px var(--a); }
+button[aria-pressed="true"]:not(.power) { background: var(--chip); border-color: var(--muted); }
+button.go { justify-self: start; background: var(--pill); color: var(--pill-ink); border-color: transparent; }
+button.go:hover { opacity: .9; }
+
+.seg { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--glass); }
+.seg button { border: 0; border-radius: 999px; padding: 6px 12px; font-size: 12px; background: transparent; }
+.seg button[aria-pressed="true"] { background: var(--pill); color: var(--pill-ink); }
+.seg button.a[aria-pressed="true"] { background: var(--a); color: var(--on-ab); }
+.seg button.b[aria-pressed="true"] { background: var(--b); color: var(--on-ab); }
+.topbar .seg, .topbar button:not(.power) { background: var(--hero-glass); border-color: var(--hero-line); color: var(--hero-ink); backdrop-filter: blur(6px); }
+.hgroup { display: flex; align-items: center; gap: 10px; }
+.hgroup input[type=range] { width: 110px; }
+.readout { font: 600 13px/1 var(--font-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.readout small { font-weight: 400; color: var(--muted); font-size: 11px; margin-left: 5px; }
+
+/* sliders: hairline track with a filled portion */
+input[type=range] { -webkit-appearance: none; appearance: none; height: 22px; background: transparent; --fill: var(--accent); cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 3px; background: linear-gradient(to right, var(--fill) var(--p, 0%), var(--track) var(--p, 0%)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5.5px; border-radius: 50%; background: var(--solid); border: 2px solid var(--fill); box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+input[type=range]::-moz-range-track { height: 3px; border-radius: 3px; background: var(--track); }
+input[type=range]::-moz-range-progress { height: 3px; border-radius: 3px; background: var(--fill); }
+input[type=range]::-moz-range-thumb { width: 11px; height: 11px; border-radius: 50%; background: var(--solid); border: 2px solid var(--fill); }
+.topbar input[type=range] { --fill: var(--hero-ink); --track: var(--hero-track); }
+input[type=checkbox] { accent-color: var(--accent); }
+
+/* ---------- panels ---------- */
+.grid2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: minmax(0,1fr); } }
+.panel {
+  background: var(--glass); border: 1px solid var(--glass-line); border-radius: 18px;
+  padding: 16px 18px 18px; min-width: 0; display: grid; gap: 12px;
+  box-shadow: var(--shadow); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.phead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.phead h2 { font: 500 12px/1 var(--font-display); text-transform: uppercase; letter-spacing: .24em; margin: 0; }
+.phead .note { color: var(--muted); font-size: 12.5px; }
+.phead .tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tools button { padding: 6px 11px; font-size: 12px; }
+.val { font: 500 12px var(--font-data); color: var(--muted); min-width: 30px; text-align: center; font-variant-numeric: tabular-nums; }
+
+.badge { font: 500 12px/1 var(--font-display); width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: var(--on-ab); }
+.badge.a { background: var(--a); } .badge.b { background: var(--b); }
+.slot { transition: border-color .25s, box-shadow .25s; }
+.slot[data-slot=A] { --fill: var(--a); } .slot[data-slot=B] { --fill: var(--b); }
+.slot[data-slot=A] input[type=range] { --fill: var(--a); } .slot[data-slot=B] input[type=range] { --fill: var(--b); }
+.slot.sounding { border-color: var(--fill); box-shadow: 0 0 0 1px var(--fill), var(--shadow); }
+.playing { display: none; font: 500 10.5px/1 var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--fill); }
+.slot.sounding .playing { display: inline; }
+
+/* partial rows */
+.prow, .phdr { display: grid; grid-template-columns: 20px 104px minmax(60px,1fr) 62px 56px 26px; gap: 10px; align-items: center; }
+.phdr { font: 500 10px/1 var(--font-display); text-transform: uppercase; letter-spacing: .2em; color: var(--muted); padding: 0 10px; }
+.plist { display: grid; gap: 0; max-height: 280px; overflow-y: auto; padding: 4px 10px; border-radius: 12px; background: var(--screen); border: 1px solid var(--glass-line); }
+.prow { padding: 4px 0; border-bottom: 1px solid var(--grid); }
+.prow:last-child { border-bottom: 0; }
+.prow.off { opacity: .4; }
+.prow input[type=number], .forms input[type=number], .frow input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.prow input[type=number] { width: 100%; padding: 5px 7px; border: 1px solid transparent; border-radius: 7px; background: var(--chip); font: 500 13px var(--font-data); font-variant-numeric: tabular-nums; }
+.prow input[type=number]:hover { border-color: var(--line); }
+.fwrap { display: flex; align-items: center; gap: 5px; }
+.fwrap i { font: normal 11px var(--font-data); color: var(--muted); }
+.prow input[type=range] { width: 100%; }
+.prow input[type=checkbox] { margin: 0; }
+.ratio { font: 500 12px var(--font-data); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.ratio.int { color: var(--ink); }
+.pdel { padding: 4px 0; font-size: 16px; line-height: 1; border-color: transparent; background: transparent; color: var(--muted); }
+.pdel:hover { color: var(--ink); border-color: transparent; }
+.empty { color: var(--muted); font-size: 13px; padding: 18px 6px; text-align: center; }
+@media (max-width: 460px) {
+  .prow, .phdr { grid-template-columns: 20px 96px minmax(40px,1fr) 56px 24px; gap: 8px; }
+  .ratio, .phdr .rh { display: none; }
+}
+.forms { display: grid; gap: 8px; }
+.forms form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.forms input { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--screen); font-size: 13px; }
+.forms .nf { width: 100px; } .forms .na { width: 76px; }
+.forms .tl { flex: 1 1 220px; min-width: 0; }
+.forms label { font-size: 12.5px; color: var(--muted); display: inline-flex; gap: 8px; align-items: center; }
+.ana { font-size: 13px; color: var(--muted); min-height: 2.9em; max-width: 72ch; }
+.ana b { color: var(--ink); font-weight: 600; }
+.ana .err { color: var(--a); }
+
+/* generators */
+.gens { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.gcard { border: 1px solid var(--glass-line); background: var(--screen); border-radius: 14px; padding: 14px; display: grid; gap: 10px; align-content: start; }
+.gcard h3 { margin: 0; font: 500 15px/1.25 var(--font-display); letter-spacing: .02em; }
+.gcard p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.frow { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.frow label { font-size: 12.5px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.frow input, .frow select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--solid); font-size: 13px; }
+.frow input { width: 78px; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+/* scope */
+.scale { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.scale input[type=range] { flex: 1 1 160px; min-width: 120px; }
+.scale .sep { width: 1px; height: 20px; background: var(--line); }
+.chk { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; cursor: pointer; }
+.chk.a input { accent-color: var(--a); } .chk.b input { accent-color: var(--b); }
+.chk.a { color: var(--a); font-weight: 600; } .chk.b { color: var(--b); font-weight: 600; }
+
+canvas { display: block; width: 100%; background: var(--screen); border-radius: 12px; touch-action: none; }
+#wave { height: 320px; cursor: crosshair; border: 1px solid var(--glass-line); }
+#spec { height: 260px; border: 1px solid var(--glass-line); }
+.hint { font-size: 12.5px; color: var(--muted); min-height: 1.4em; font-variant-numeric: tabular-nums; }
+.hint b { color: var(--ink); font-weight: 600; }
+.hint .ka { color: var(--a); font-weight: 700; } .hint .kb { color: var(--b); font-weight: 700; } .hint .kv { color: var(--v); font-weight: 700; }
+.chk.v input { accent-color: var(--v); } .chk.v { color: var(--v); font-weight: 600; }
+button:disabled { opacity: .4; cursor: default; }
+button:disabled:hover { border-color: var(--line); }
+.seg button.v[aria-pressed="true"] { background: var(--v); color: var(--solid); }
+
+/* voice */
+.voice { transition: border-color .25s, box-shadow .25s; }
+.voice.sounding { border-color: var(--v); box-shadow: 0 0 0 1px var(--v), var(--shadow); }
+.vrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.vrow .sep { width: 1px; height: 22px; background: var(--line); }
+.meter { width: 96px; height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--v); }
+.vpitch { display: flex; align-items: baseline; gap: 8px; min-width: 190px; }
+.vpitch .big { font: 300 28px/1 var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.vpitch small { color: var(--muted); font-size: 12px; }
+.vlab { font-size: 12.5px; color: var(--muted); display: inline-flex; gap: 8px; align-items: center; }
+.vlab input { padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--screen); width: 130px; font-size: 13px; }
+#recBtn[aria-pressed="true"] { background: var(--a); color: var(--on-ab); border-color: transparent; }
+.vstatus { margin: 0; font-size: 12.5px; color: var(--muted); }
+.vrow.syn { padding-top: 10px; border-top: 1px solid var(--grid); }
+
+/* filter */
+.bands { display: grid; gap: 6px; }
+.band { display: grid; grid-template-columns: 118px minmax(80px,1.4fr) 92px minmax(70px,1fr) 44px minmax(70px,1fr) 62px 26px; gap: 8px 10px; align-items: center; padding: 6px 10px; border: 1px solid var(--glass-line); border-radius: 12px; background: var(--screen); }
+.band.bhdr { background: transparent; border-color: transparent; padding-block: 0; font: 500 10px/1 var(--font-display); text-transform: uppercase; letter-spacing: .2em; color: var(--muted); }
+.band select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--solid); font-size: 12.5px; }
+.band input[type=number] { width: 100%; padding: 5px 7px; border: 1px solid transparent; border-radius: 7px; background: var(--chip); font: 500 13px var(--font-data); font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.band input[type=range] { width: 100%; }
+.band .readout { font-size: 12px; text-align: right; }
+@media (max-width: 760px) { .band { grid-template-columns: 1fr 1fr; } .band.bhdr { display: none; } }
+.fnote { font-size: 12.5px; color: var(--muted); }
+.navlink { font: 500 11px/1 var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--hero-ink); text-decoration: none; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--hero-line); background: var(--hero-glass); }
+.navlink:hover { border-color: var(--hero-ink); }
+
+/* guide */
+details.guide { padding: 0; }
+details.guide > summary { list-style: none; cursor: pointer; padding: 16px 18px; display: flex; align-items: center; gap: 12px; }
+details.guide > summary::-webkit-details-marker { display: none; }
+details.guide > summary h2 { font: 500 12px/1 var(--font-display); text-transform: uppercase; letter-spacing: .24em; margin: 0; }
+details.guide > summary .note { color: var(--muted); font-size: 12.5px; }
+details.guide > summary::after { content: "+"; margin-left: auto; font: 300 22px/1 var(--font-display); color: var(--muted); }
+details.guide[open] > summary::after { content: "−"; }
+.gwrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 18px; padding: 0 18px 18px; }
+.gstep { border: 1px solid var(--glass-line); background: var(--screen); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+.gstep h3 { margin: 0 0 8px; font: 500 15px/1.3 var(--font-display); letter-spacing: .02em; }
+.gstep h3 small { display: block; font: 500 10.5px/1.4 var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.gstep ol { margin: 0; padding-left: 20px; display: grid; gap: 5px; font-size: 13.5px; }
+.gstep p { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+.gstep b { font-weight: 600; }
+.vrow.syn input[type=range] { width: 180px; }
+
+/* gesture */
+.gbody { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 560px) { .gbody { grid-template-columns: minmax(0,1fr); } }
+.stage { position: relative; aspect-ratio: 4 / 3; max-width: 100%; background: var(--screen); border-radius: 14px; overflow: hidden; border: 1px solid var(--glass-line); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; background: transparent; }
+.stage video, .stage #ov { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; transform: scaleX(-1); display: none; }
+.stage[data-mode=camera] video, .stage[data-mode=camera] #ov { display: block; }
+.stage[data-mode=camera] #pad { display: none; }
+#pad { cursor: crosshair; }
+.gparams { display: grid; gap: 10px; align-content: start; }
+.gp { display: grid; grid-template-columns: 84px minmax(0,1fr) 84px; gap: 10px; align-items: center; }
+.gp label { font-size: 12.5px; }
+.gp input { width: 100%; }
+.gp .readout { text-align: right; font-size: 12px; }
+.gmap { margin: 0; font-size: 12.5px; color: var(--muted); }
+.gmap b { color: var(--ink); font-weight: 600; }
+.gstatus { margin: 0; font-size: 12.5px; color: var(--a); min-height: 1.4em; }
+
+footer { color: var(--muted); font-size: 13.5px; padding: 8px 4px 0; }
+footer h2 { font: 500 12px/1 var(--font-display); text-transform: uppercase; letter-spacing: .24em; color: var(--ink); margin: 6px 0 12px; }
+footer ul { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+footer li { border-top: 1px solid var(--line); padding-top: 10px; }
+footer b { color: var(--ink); font-weight: 600; }
+@media (max-width: 520px) { .hero { padding: 14px 14px 0; } .herotext { padding-bottom: 96px; } .hero { min-height: 0; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* morph */
+.slist { display: grid; gap: 6px; }
+.snd { display: grid; grid-template-columns: 16px minmax(90px, 180px) minmax(0, 1fr) auto 26px; gap: 10px; align-items: center; padding: 6px 10px; border: 1px solid var(--glass-line); border-radius: 12px; background: var(--screen); }
+.snd .sw { width: 14px; height: 14px; border-radius: 50%; }
+.snd .sname { padding: 5px 9px; border: 1px solid transparent; border-radius: 7px; background: var(--chip); font: 600 13px var(--font-body); min-width: 0; }
+.snd .sname:hover { border-color: var(--line); }
+.snd .sinfo { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 0; }
+.snd .splay { padding: 6px 11px; font-size: 12px; }
+@media (max-width: 520px) { .snd { grid-template-columns: 16px minmax(0, 1fr) auto 26px; } .snd .sinfo { grid-column: 2 / -1; grid-row: 2; } }
+.lpick { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.lpick select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--solid); font-size: 13px; max-width: 170px; }
+.lslide { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) minmax(0, 110px); gap: 12px; align-items: center; padding: 18px 4px; }
+.lslide input[type=range] { width: 100%; height: 34px; }
+.lslide input[type=range]::-webkit-slider-thumb { width: 22px; height: 22px; margin-top: -9.5px; }
+.lslide input[type=range]::-moz-range-thumb { width: 18px; height: 18px; }
+.lend { font: 600 13px/1.2 var(--font-body); overflow-wrap: anywhere; }
+.lend:last-child { text-align: right; }
+#square { aspect-ratio: 1 / 1; height: auto; width: 100%; max-width: 500px; margin: 0 auto; cursor: crosshair; border: 1px solid var(--glass-line); }
+#result { height: 380px; border: 1px solid var(--glass-line); }
+@media (max-width: 520px) { .lslide { grid-template-columns: minmax(0, 64px) minmax(0, 1fr) minmax(0, 64px); gap: 8px; } #result { height: 260px; } }
+.hint i, .sinfo i { font-style: normal; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <svg class="dunes" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
+      <path class="d1" d="M0,150 C200,92 360,110 560,148 C760,186 900,84 1110,96 C1270,105 1370,140 1440,132 L1440,300 L0,300 Z"/>
+      <path class="d2" d="M0,214 C170,186 330,160 530,198 C720,234 860,176 1030,170 C1210,164 1330,206 1440,198 L1440,300 L0,300 Z"/>
+      <path class="d3" d="M0,268 C240,244 430,258 650,250 C890,240 1090,276 1440,258 L1440,300 L0,300 Z"/>
+    </svg>
+    <nav class="topbar" aria-label="Sound controls">
+      <div class="brand"><svg viewBox="0 0 38 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5"/><circle cx="19" cy="9" r="7.5"/><circle cx="29" cy="9" r="7.5"/></svg>Morph</div>
+      <div class="spacer"></div>
+      <div class="hgroup"><span class="lbl">Blend</span>
+        <div class="seg" id="mode">
+          <button data-v="spectral" aria-pressed="true" title="Blend pitch and harmonic shape, then play the result">Spectral</button>
+          <button data-v="crossfade" aria-pressed="false" title="Mix the recordings' volumes">Crossfade</button>
+        </div>
+      </div>
+      <div class="hgroup"><label class="lbl" for="level">Level</label><input id="level" type="range" min="0" max="100" value="35"><span class="readout" id="levelOut">35%</span></div>
+      <a class="navlink" href="index.html">← Partials Lab</a>
+    </nav>
+    <div class="herotext">
+      <h1>MORPH</h1>
+      <p class="kicker">Lab</p>
+      <p class="tag">Record sounds, place them on a line or a square, and travel between them.</p>
+    </div>
+  </header>
+
+  <details class="panel guide" id="guide">
+    <summary><h2>How to do the assignments</h2><span class="note">parts 3 and 4</span></summary>
+    <div class="gwrap">
+      <div class="gstep">
+        <h3><small>Before you start</small>Get your sounds in</h3>
+        <ol>
+          <li>Put on headphones. Press <b>Microphone on</b> and allow the microphone.</li>
+          <li>Press <b>Record a sound</b>, hold a steady vowel or note for 1–3 s, press <b>Stop</b>.</li>
+          <li>Rename it (click its name). Record a few more: different vowels, different pitches.</li>
+          <li>The four examples let you try everything before recording; delete them with ×.</li>
+        </ol>
+      </div>
+      <div class="gstep">
+        <h3><small>Part 3</small>A slider between two sounds</h3>
+        <ol>
+          <li>In <b>Line</b>, pick the left and right sounds.</li>
+          <li>Press and drag the slider. All the way left is the left sound, all the way right is the right sound.</li>
+          <li>In between you hear a blend: pitch and vowel shape both move gradually.</li>
+          <li>Press <b>Hold</b> to keep it sounding while you move the slider with the keyboard arrows.</li>
+        </ol>
+      </div>
+      <div class="gstep">
+        <h3><small>Part 4</small>A square of sounds</h3>
+        <ol>
+          <li>Each sound is a dot in the <b>Square</b>. Choose <b>Arrange</b> to drag dots where you want them.</li>
+          <li>Back in <b>Play</b>, press and drag anywhere. Near a dot you hear mostly that sound; on a dot, its recording.</li>
+          <li>The lines from your finger to the dots get thicker the more each sound counts.</li>
+          <li>Try <b>Crossfade</b> at the top to hear the difference between mixing volumes and blending shapes.</li>
+        </ol>
+        <p>For the video, record your screen while you drag across the square.</p>
+      </div>
+    </div>
+  </details>
+
+  <section class="panel" id="soundsPanel">
+    <div class="phead">
+      <h2>Sounds</h2><span class="note">up to 8 · each one becomes a dot in the square</span>
+      <div class="tools"><button id="examples">Add examples</button></div>
+    </div>
+    <div class="vrow">
+      <button id="micBtn" class="power" aria-pressed="false"><span class="led"></span><span id="micLabel">Microphone off</span></button>
+      <div class="meter" aria-hidden="true"><i id="meterFill"></i></div>
+      <button id="recBtn" aria-pressed="false">● Record a sound</button>
+      <span class="val" id="recTime">up to 4 s</span>
+    </div>
+    <div class="slist" id="slist"></div>
+    <p class="vstatus" id="status" role="status">Four example vowels are loaded so you can try the line and the square right away. Record your own to replace them.</p>
+  </section>
+
+  <section class="panel">
+    <div class="phead">
+      <h2>Line</h2><span class="note">part 3 · between two sounds</span>
+      <div class="tools"><button id="lineHold" aria-pressed="false">Hold</button></div>
+    </div>
+    <div class="lpick">
+      <label class="vlab" for="lineA">Left <select id="lineA"></select></label>
+      <label class="vlab" for="lineB">Right <select id="lineB"></select></label>
+    </div>
+    <div class="lslide">
+      <span class="lend" id="lendA"></span>
+      <input type="range" id="lineT" min="0" max="1000" value="0" aria-label="Position between the left and right sounds">
+      <span class="lend" id="lendB"></span>
+    </div>
+    <div class="hint" id="lineOut">Press and drag the slider to hear the blend.</div>
+  </section>
+
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="phead">
+        <h2>Square</h2><span class="note">part 4 · between all sounds</span>
+        <div class="tools">
+          <div class="seg" id="sqMode"><button data-v="play" aria-pressed="true">Play</button><button data-v="arrange" aria-pressed="false">Arrange</button></div>
+          <button id="sqHold" aria-pressed="false">Hold</button>
+        </div>
+      </div>
+      <canvas id="square" aria-label="Square of sounds. Press and drag to blend between the dots."></canvas>
+      <div class="hint" id="sqOut">Press and drag inside the square.</div>
+    </section>
+    <section class="panel">
+      <div class="phead">
+        <h2>What you hear</h2><span class="note" id="resNote">each sound's shape in its colour · the blend's harmonics in ink</span>
+      </div>
+      <canvas id="result" aria-label="Spectrum of the blend"></canvas>
+      <div class="hint" id="resOut">Nothing playing.</div>
+    </section>
+  </div>
+
+  <footer>
+    <h2>How the blend works</h2>
+    <ul>
+      <li><b>Analysis.</b> Each sound is measured once: its pitch, and the loudness of every harmonic. A line through those harmonic peaks is the sound's shape, its vowel.</li>
+      <li><b>Weights.</b> On the line, the slider sets how much each end counts. In the square, each dot counts by one over its squared distance from your finger, so the nearest dot wins and on a dot only that dot counts.</li>
+      <li><b>Spectral blend.</b> The pitch is a weighted average on a musical (log) scale; each new harmonic's loudness is the weighted mix of every sound's shape at that frequency. The result is played with sine waves.</li>
+      <li><b>On a dot</b> the app fades to the real recording, so you hear exactly what you recorded. <b>Crossfade</b> instead just mixes the recordings' volumes.</li>
+    </ul>
+  </footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const trim0 = s => s.includes('.') ? s.replace(/\.?0+$/, '') : s;
+  const fmtF = f => f < 1000 ? trim0(f.toFixed(f < 100 ? 2 : 1)) + ' Hz' : trim0((f / 1000).toFixed(2)) + ' kHz';
+  const NOTES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const noteName = f => { const r = Math.round(69 + 12 * Math.log2(f / 440)); return NOTES[(r % 12 + 12) % 12] + (Math.floor(r / 12) - 1); };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fillR = el => el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%');
+  document.addEventListener('input', e => { if (e.target.type === 'range') fillR(e.target); });
+  function setSeg(id, v) { $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === String(v))); }
+  function onSeg(id, fn) { $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (b) fn(b.dataset.v); }); }
+  const status = t => { $('status').textContent = t; };
+  let dirty = true;
+
+  // ================= analysis (the same method as Partials Lab) =================
+  const VN = 8192, HANN = new Float32Array(VN), ENV_FMAX = 8000, MAXH = 64;
+  for (let i = 0; i < VN; i++) HANN[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (VN - 1));
+  const fre = new Float64Array(VN), fim = new Float64Array(VN);
+  function fft(re, im) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit;
+      if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const a = i + k, b = a + len / 2, tr = re[b] * cr - im[b] * ci, ti = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+          const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
+        }
+      }
+    }
+  }
+  function powerAcc(x, off, acc) {
+    for (let i = 0; i < VN; i++) { fre[i] = x[off + i] * HANN[i]; fim[i] = 0; }
+    fft(fre, fim);
+    for (let k = 0; k < VN / 2; k++) acc[k] += fre[k] * fre[k] + fim[k] * fim[k];
+  }
+  function toDb(acc) {
+    let m = 0; for (let k = 1; k < acc.length; k++) m = Math.max(m, acc[k]);
+    const out = new Float32Array(acc.length);
+    for (let k = 0; k < acc.length; k++) out[k] = 10 * Math.log10(acc[k] / (m || 1) + 1e-12);
+    return out;
+  }
+  function yin(x, sr) {
+    const maxLag = Math.floor(sr / 60), minLag = Math.floor(sr / 1000), W = x.length - maxLag;
+    if (W < 256) return 0;
+    const d = new Float32Array(maxLag + 2);
+    for (let tau = 1; tau <= maxLag + 1 && tau + W <= x.length; tau++) { let s = 0; for (let i = 0; i < W; i++) { const v = x[i] - x[i + tau]; s += v * v; } d[tau] = s; }
+    let run = 0; d[0] = 1;
+    for (let tau = 1; tau <= maxLag; tau++) { run += d[tau]; d[tau] = run ? d[tau] * tau / run : 1; }
+    let tau = -1;
+    for (let t = minLag; t <= maxLag; t++) if (d[t] < 0.15) { while (t + 1 <= maxLag && d[t + 1] < d[t]) t++; tau = t; break; }
+    if (tau < 2) return 0;
+    const a = d[tau - 1], b = d[tau], c = tau + 1 <= maxLag ? d[tau + 1] : b, den = a - 2 * b + c;
+    return sr / (tau + (den ? 0.5 * (a - c) / den : 0));
+  }
+  const rmsOf = x => { let s = 0; for (let i = 0; i < x.length; i++) s += x[i] * x[i]; return Math.sqrt(s / (x.length || 1)); };
+  function peakNear(db, df, c, half) {
+    const lo = Math.max(1, Math.round((c - half) / df)), hi = Math.min(db.length - 2, Math.round((c + half) / df));
+    if (hi < lo) return null;
+    let k = lo; for (let i = lo + 1; i <= hi; i++) if (db[i] > db[k]) k = i;
+    const a = db[k - 1], b = db[k], c2 = db[k + 1], den = a - 2 * b + c2, d = den ? clamp(0.5 * (a - c2) / den, -0.5, 0.5) : 0;
+    return { f: (k + d) * df, db: b - 0.25 * (a - c2) * d };
+  }
+  function measure(db, sr, f0) {
+    const df = sr / VN, H = [];
+    for (let n = 1; n * f0 < ENV_FMAX && n <= MAXH; n++) { const p = peakNear(db, df, n * f0, 0.25 * f0); if (p) H.push({ n, ...p }); }
+    return H;
+  }
+  // pitch (median over the loud part), the average spectrum of the loud part, then each harmonic's loudness
+  function analyse(data, sr) {
+    let peak = 0; for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+    const B = 2048, nb = Math.floor(data.length / B), rms = new Float32Array(nb); let mr = 0;
+    for (let b = 0; b < nb; b++) { rms[b] = rmsOf(data.subarray(b * B, (b + 1) * B)); mr = Math.max(mr, rms[b]); }
+    const loud = b => b >= 0 && b < nb && rms[b] > 0.3 * mr;
+    const L = B + Math.ceil(sr / 60) + 2, cand = [];
+    for (let b = 0; b < nb; b++) if (loud(b) && b * B + L <= data.length) cand.push(b);
+    const ps = [], step = Math.max(1, Math.ceil(cand.length / 12));
+    for (let j = 0; j < cand.length; j += step) { const b = cand[j], f = yin(data.subarray(b * B, b * B + L), sr); if (f) ps.push(f); }
+    ps.sort((x, y) => x - y);
+    const acc = new Float64Array(VN / 2); let nf = 0;
+    for (let off = 0; off + VN <= data.length; off += VN / 2) if (loud(Math.floor((off + VN / 2) / B))) { powerAcc(data, off, acc); nf++; }
+    if (!nf && data.length >= VN) { powerAcc(data, Math.floor((data.length - VN) / 2), acc); nf = 1; }
+    let f0 = ps.length ? ps[ps.length >> 1] : 0, H = [];
+    if (f0 && nf) {
+      const db = toDb(acc);
+      H = measure(db, sr, f0);
+      let sw = 0, sf = 0;
+      H.slice(0, 8).forEach(h => { if (h.db > -30) { const w = Math.pow(10, h.db / 20); sw += w; sf += w * h.f / h.n; } });
+      if (sw) { f0 = sf / sw; H = measure(db, sr, f0); }
+      const top = Math.max(...H.map(h => h.db)); H.forEach(h => { h.db -= top; });
+    }
+    return { peak: peak || 1, f0: H.length ? f0 : 0, H, dur: data.length / sr };
+  }
+  // a sound's shape: dB over log frequency through its harmonic peaks, rolling off 12 dB per octave above the last
+  function envAt(s, f) {
+    const H = s.H, last = H[H.length - 1];
+    if (f <= H[0].f) return H[0].db;
+    if (f >= last.f) return last.db - 12 * Math.log2(f / last.f);
+    let i = 1; while (H[i].f < f) i++;
+    const a = H[i - 1], b = H[i], u = Math.log(f / a.f) / Math.log(b.f / a.f);
+    return a.db + u * (b.db - a.db);
+  }
+
+  // ================= sounds =================
+  const MAX_SOUNDS = 8, SPOTS = [[0.15, 0.15], [0.85, 0.15], [0.15, 0.85], [0.85, 0.85], [0.5, 0.5], [0.5, 0.12], [0.12, 0.5], [0.88, 0.5]];
+  let sounds = [], nextId = 1;
+  const colorOf = s => css(`--s${s.slot + 1}`);
+  // cut the quiet start and end, and fade the edges so the loop does not click
+  function trimQuiet(data, sr) {
+    const B = 1024, nb = Math.floor(data.length / B); let mr = 0; const r = [];
+    for (let b = 0; b < nb; b++) { r[b] = rmsOf(data.subarray(b * B, (b + 1) * B)); mr = Math.max(mr, r[b]); }
+    let a = 0, z = nb - 1; while (a < nb && r[a] < 0.15 * mr) a++; while (z > a && r[z] < 0.15 * mr) z--;
+    const out = data.slice(a * B, (z + 1) * B), fade = Math.min(Math.round(0.015 * sr), out.length >> 2);
+    for (let i = 0; i < fade; i++) { const g = i / fade; out[i] *= g; out[out.length - 1 - i] *= g; }
+    return out;
+  }
+  function addSound(name, data, sr, example) {
+    if (sounds.length >= MAX_SOUNDS) { status(`There is room for ${MAX_SOUNDS} sounds. Delete one with × first.`); return null; }
+    const used = new Set(sounds.map(s => s.slot)), slot = [0, 1, 2, 3, 4, 5, 6, 7].find(i => !used.has(i));
+    const s = { id: nextId++, name, data, sr, example, slot, x: SPOTS[slot][0], y: SPOTS[slot][1], buf: null, ...analyse(data, sr) };
+    if (playing) stopPlay();
+    sounds.push(s); soundsChanged();
+    return s;
+  }
+  function soundsChanged() { renderSounds(); renderSelects(); refresh(); }
+  function renderSounds() {
+    $('slist').innerHTML = sounds.length ? sounds.map(s => `<div class="snd" data-id="${s.id}">
+      <span class="sw" style="background:var(--s${s.slot + 1})" aria-hidden="true"></span>
+      <input class="sname" value="${esc(s.name)}" maxlength="24" aria-label="Name of this sound" spellcheck="false">
+      <span class="sinfo">${s.f0 ? `${fmtF(s.f0)} · ${noteName(s.f0)}` : 'no steady pitch'} · ${s.dur.toFixed(1)} s${s.example ? ' · <i>example</i>' : ''}</span>
+      <button type="button" class="splay">▶ Play</button>
+      <button type="button" class="pdel" aria-label="Delete ${esc(s.name)}">×</button></div>`).join('')
+      : '<div class="empty">No sounds yet. Press Record a sound, or Add examples.</div>';
+  }
+  $('slist').addEventListener('input', e => {
+    if (!e.target.classList.contains('sname')) return;
+    const s = sounds.find(x => x.id === +e.target.closest('.snd').dataset.id); s.name = e.target.value || 'Sound';
+    renderSelects(); dirty = true;
+  });
+  $('slist').addEventListener('click', e => {
+    const row = e.target.closest('.snd'); if (!row) return;
+    const s = sounds.find(x => x.id === +row.dataset.id);
+    if (e.target.closest('.pdel')) { if (playing) stopPlay(); sounds = sounds.filter(x => x !== s); soundsChanged(); status(`Deleted “${s.name}”.`); }
+    else if (e.target.closest('.splay')) playOnce(s);
+  });
+
+  // ---- examples: vowels made from a source and resonances, so the app works before you record ----
+  function makeVowel(f0, formants, dur = 2, sr = 48000) {
+    const n = Math.round(dur * sr), out = new Float32Array(n), K = Math.floor(7000 / f0);
+    const env = f => formants.reduce((s, [F, a, bw]) => s + a / (1 + Math.pow((f - F) / bw, 2)), 0) + 0.015;
+    const amp = []; for (let k = 1; k <= K; k++) amp.push(env(k * f0));
+    let ph = 0, seed = 7;
+    for (let i = 0; i < n; i++) {
+      ph += 2 * Math.PI * f0 * (1 + 0.004 * Math.sin(2 * Math.PI * 5 * i / sr)) / sr;
+      let v = 0; for (let k = 0; k < K; k++) v += amp[k] * Math.sin((k + 1) * ph);
+      seed = (seed * 16807) % 2147483647; out[i] = v + 0.01 * (seed / 2147483647 - 0.5);
+    }
+    let pk = 0; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(out[i]));
+    const fade = Math.round(0.015 * sr);
+    for (let i = 0; i < n; i++) out[i] *= 0.6 / pk * Math.min(1, i / fade, (n - 1 - i) / fade);
+    return out;
+  }
+  const EXAMPLES = [
+    ['ah · low', 220, [[850, 1, 90], [1220, 0.55, 110], [2810, 0.2, 170]]],
+    ['ee · low', 220, [[310, 1, 60], [2790, 0.25, 120], [3310, 0.15, 170]]],
+    ['oo · high', 330, [[370, 1, 70], [950, 0.4, 100], [2670, 0.08, 160]]],
+    ['eh · high', 330, [[610, 1, 80], [2330, 0.4, 120], [2990, 0.25, 170]]],
+  ];
+  function addExamples() {
+    let added = 0;
+    EXAMPLES.forEach(([name, f0, fm]) => { if (!sounds.some(s => s.example && s.name === name) && sounds.length < MAX_SOUNDS) { addSound(name, makeVowel(f0, fm), 48000, true); added++; } });
+    status(added ? `Added ${added} example vowels.` : 'The examples are already here, or there is no room left.');
+  }
+  $('examples').onclick = addExamples;
+
+  // ================= weights =================
+  let panel = 'square', lineA = null, lineB = null, lineT = 0, pt = null, current = null;
+  function weightsLine() {
+    const ia = sounds.findIndex(s => s.id === lineA), ib = sounds.findIndex(s => s.id === lineB);
+    if (ia < 0 || ib < 0) return null;
+    const w = sounds.map(() => 0); w[ia] += 1 - lineT; w[ib] += lineT;
+    return w;
+  }
+  // inverse squared distance: the nearest dot counts most, and on a dot only that dot counts
+  function weightsSquare(p) {
+    if (!p || !sounds.length) return null;
+    const d = sounds.map(s => Math.hypot(s.x - p.x, s.y - p.y)), hit = d.findIndex(v => v < 1e-6);
+    if (hit >= 0) return sounds.map((_, i) => i === hit ? 1 : 0);
+    const inv = d.map(v => 1 / (v * v)), tot = inv.reduce((a, v) => a + v, 0);
+    return inv.map(v => v / tot);
+  }
+  function refresh() { current = panel === 'line' ? weightsLine() : weightsSquare(pt); apply(); }
+
+  // ================= sound engine =================
+  let ctx = null, comp = null, outG = null, synthG = null, bank = [], srcs = [], playing = false, mode = 'spectral', level = 0.35, blend = null;
+  function ensureCtx() {
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    comp = ctx.createDynamicsCompressor(); comp.threshold.value = -8; comp.ratio.value = 6; comp.connect(ctx.destination);
+    outG = ctx.createGain(); outG.connect(comp);
+    synthG = ctx.createGain(); synthG.gain.value = 0; synthG.connect(outG);
+  }
+  const bufOf = s => { if (!s.buf) { s.buf = ctx.createBuffer(1, s.data.length, s.sr); s.buf.copyToChannel(s.data, 0); } return s.buf; };
+  // the blend: pitch averaged on a log scale, each harmonic's loudness mixed from every sound's shape
+  function morph(w) {
+    if (!w) return null;
+    const P = sounds.map((s, i) => ({ s, w: w[i] })).filter(o => o.w > 1e-4 && o.s.f0);
+    const W = P.reduce((a, o) => a + o.w, 0);
+    if (!W) return null;
+    const f0 = Math.exp(P.reduce((a, o) => a + o.w * Math.log(o.s.f0), 0) / W), parts = [];
+    for (let n = 1; n * f0 < ENV_FMAX && n <= MAXH; n++) {
+      const f = n * f0, a = P.reduce((acc, o) => acc + o.w * Math.pow(10, envAt(o.s, f) / 20), 0) / W;
+      if (a > 0.001) parts.push({ f, a });
+    }
+    const top = Math.max(...parts.map(p => p.a), 1e-9); parts.forEach(p => { p.a /= top; });
+    return { f0, parts };
+  }
+  // close to a dot (weight above 0.85) the real recording fades in, so on a dot you hear exactly what you recorded
+  const snap = w => clamp((w - 0.85) / 0.15, 0, 1);
+  function apply() {
+    blend = mode === 'spectral' ? morph(current) : null; dirty = true;
+    if (!playing || !ctx) return;
+    const t = ctx.currentTime, w = current || [];
+    let exact = 0;
+    srcs.forEach(o => {
+      const i = sounds.indexOf(o.s), wi = i >= 0 ? w[i] || 0 : 0, k = mode === 'crossfade' ? wi : snap(wi);
+      if (mode === 'spectral') exact = Math.max(exact, k);
+      o.g.gain.setTargetAtTime(level * 0.9 / o.s.peak * k, t, 0.03);
+    });
+    const parts = blend ? blend.parts : [], sum = parts.reduce((a, p) => a + p.a, 0);
+    synthG.gain.setTargetAtTime(sum ? level * (1 - exact) / sum : 0, t, 0.03);
+    parts.forEach((p, i) => {
+      let v = bank[i];
+      if (!v) { const o = ctx.createOscillator(), g = ctx.createGain(); g.gain.value = 0; o.frequency.value = p.f; o.connect(g).connect(synthG); o.start(); v = bank[i] = { o, g }; }
+      v.o.frequency.setTargetAtTime(p.f, t, 0.02); v.g.gain.setTargetAtTime(p.a, t, 0.02);
+    });
+    for (let i = parts.length; i < bank.length; i++) bank[i].g.gain.setTargetAtTime(0, t, 0.02);
+  }
+  function startPlay() {
+    ensureCtx(); ctx.resume();
+    if (playing) { apply(); return; }
+    playing = true;
+    const t0 = ctx.currentTime + 0.03;
+    srcs = sounds.map(s => { const src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = bufOf(s); src.loop = true; g.gain.value = 0; src.connect(g).connect(outG); src.start(t0); return { s, src, g }; });
+    apply();
+  }
+  function stopPlay() {
+    if (!playing) return;
+    playing = false;
+    const t = ctx.currentTime;
+    synthG.gain.setTargetAtTime(0, t, 0.04);
+    srcs.forEach(o => { o.g.gain.setTargetAtTime(0, t, 0.04); o.src.stop(t + 0.3); }); srcs = [];
+    lineHold = sqHold = false; $('lineHold').setAttribute('aria-pressed', false); $('sqHold').setAttribute('aria-pressed', false);
+    dirty = true;
+  }
+  function playOnce(s) {
+    ensureCtx(); ctx.resume();
+    const src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = bufOf(s); g.gain.value = level * 0.9 / s.peak;
+    src.connect(g).connect(outG); src.start();
+  }
+  onSeg('mode', v => { mode = v; setSeg('mode', v); apply(); });
+  $('level').addEventListener('input', e => { level = e.target.value / 100; $('levelOut').textContent = e.target.value + '%'; apply(); });
+
+  // ================= line (part 3) =================
+  let lineHold = false, lineDown = false;
+  function renderSelects() {
+    const ids = sounds.map(s => s.id);
+    if (!ids.includes(lineA)) lineA = ids[0] ?? null;
+    if (!ids.includes(lineB) || lineB === lineA) lineB = ids.find(i => i !== lineA) ?? lineA;
+    ['lineA', 'lineB'].forEach(id => {
+      const v = id === 'lineA' ? lineA : lineB;
+      $(id).innerHTML = sounds.map(s => `<option value="${s.id}"${s.id === v ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
+    });
+    const a = sounds.find(s => s.id === lineA), b = sounds.find(s => s.id === lineB);
+    $('lendA').textContent = a ? a.name : '—'; $('lendA').style.color = a ? colorOf(a) : '';
+    $('lendB').textContent = b ? b.name : '—'; $('lendB').style.color = b ? colorOf(b) : '';
+  }
+  $('lineA').addEventListener('change', e => { lineA = +e.target.value; renderSelects(); if (panel === 'line') refresh(); });
+  $('lineB').addEventListener('change', e => { lineB = +e.target.value; renderSelects(); if (panel === 'line') refresh(); });
+  $('lineT').addEventListener('input', e => { lineT = +e.target.value / 1000; panel = 'line'; refresh(); });
+  $('lineT').addEventListener('pointerdown', () => { lineDown = true; panel = 'line'; sqHold = false; $('sqHold').setAttribute('aria-pressed', false); refresh(); startPlay(); });
+  $('lineHold').onclick = () => {
+    if (lineHold) { stopPlay(); return; }
+    lineHold = true; sqHold = false; panel = 'line'; $('lineHold').setAttribute('aria-pressed', true); $('sqHold').setAttribute('aria-pressed', false);
+    refresh(); startPlay();
+  };
+
+  // ================= square (part 4) =================
+  let sqMode = 'play', sqHold = false, sqDown = false, drag = null, sqGeom = null;
+  onSeg('sqMode', v => { sqMode = v; setSeg('sqMode', v); $('square').style.cursor = v === 'arrange' ? 'grab' : 'crosshair'; dirty = true; });
+  const DOT = 13;
+  function sqPoint(e) {
+    const r = $('square').getBoundingClientRect(), { pad, side } = sqGeom;
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    return { px, py, x: clamp((px - pad) / side, 0, 1), y: clamp((py - pad) / side, 0, 1) };
+  }
+  const dotAt = q => sounds.find(s => Math.hypot(sqGeom.pad + s.x * sqGeom.side - q.px, sqGeom.pad + s.y * sqGeom.side - q.py) <= DOT + 4);
+  function sqPlayAt(q) {
+    const d = dotAt(q);
+    pt = d ? { x: d.x, y: d.y } : { x: q.x, y: q.y };   // a press on a dot lands exactly on it
+    panel = 'square'; refresh();
+  }
+  $('square').addEventListener('pointerdown', e => {
+    if (!sqGeom) return;
+    const q = sqPoint(e);
+    $('square').setPointerCapture(e.pointerId);
+    if (sqMode === 'arrange') { drag = dotAt(q) || null; return; }
+    sqDown = true; lineHold = false; $('lineHold').setAttribute('aria-pressed', false);
+    sqPlayAt(q); startPlay();
+  });
+  $('square').addEventListener('pointermove', e => {
+    if (!sqGeom) return;
+    const q = sqPoint(e);
+    if (drag) { drag.x = q.x; drag.y = q.y; if (panel === 'square') refresh(); dirty = true; return; }
+    if (sqDown) sqPlayAt(q);
+  });
+  const sqUp = () => { drag = null; if (sqDown) { sqDown = false; if (!sqHold) stopPlay(); } };
+  $('square').addEventListener('pointerup', sqUp);
+  $('square').addEventListener('pointercancel', sqUp);
+  window.addEventListener('pointerup', () => { if (lineDown) { lineDown = false; if (!lineHold) stopPlay(); } });
+  $('sqHold').onclick = () => {
+    if (sqHold) { stopPlay(); return; }
+    sqHold = true; lineHold = false; panel = 'square'; $('sqHold').setAttribute('aria-pressed', true); $('lineHold').setAttribute('aria-pressed', false);
+    if (!pt) pt = { x: 0.5, y: 0.5 };
+    refresh(); startPlay();
+  };
+
+  // ================= microphone and recording =================
+  const REC_MAX = 4;
+  let mic = null, micSR = 48000, recording = false, chunks = [], recLen = 0, lastRms = 0;
+  async function startMic() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { status('The microphone needs a secure (https) page or a file opened on your computer, in a browser that supports it.'); return; }
+    ensureCtx(); await ctx.resume();
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+    catch (err) { status(`Microphone not available (${err.message}). Allow microphone access for this page, then try again.`); return; }
+    micSR = ctx.sampleRate;
+    const srcN = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(2048, 1, 1), sink = ctx.createGain();
+    sink.gain.value = 0;
+    proc.onaudioprocess = e => {
+      const x = e.inputBuffer.getChannelData(0); lastRms = rmsOf(x);
+      if (recording) { chunks.push(x.slice()); recLen += x.length; if (recLen >= REC_MAX * micSR) stopRec(); }
+    };
+    srcN.connect(proc); proc.connect(sink); sink.connect(ctx.destination);
+    mic = { stream, srcN, proc, sink };
+    micUI(); status('Microphone on. Press Record a sound and hold a steady vowel or note.');
+  }
+  function stopMic() {
+    if (recording) stopRec();
+    mic.stream.getTracks().forEach(t => t.stop());
+    mic.proc.onaudioprocess = null; mic.srcN.disconnect(); mic.proc.disconnect(); mic.sink.disconnect();
+    mic = null; lastRms = 0; micUI();
+  }
+  async function startRec() {
+    if (!mic) await startMic();
+    if (!mic) return;
+    if (sounds.length >= MAX_SOUNDS) { status(`There is room for ${MAX_SOUNDS} sounds. Delete one with × first.`); return; }
+    if (playing) stopPlay();
+    chunks = []; recLen = 0; recording = true; micUI(); status('Recording… hold it steady, then press Stop.');
+  }
+  function stopRec() {
+    recording = false; micUI();
+    if (recLen < micSR * 0.3) { chunks = []; status('That was too short. Record at least half a second.'); return; }
+    const data = new Float32Array(recLen); let o = 0;
+    chunks.forEach(c => { data.set(c, o); o += c.length; }); chunks = [];
+    const n = sounds.filter(s => !s.example).length + 1, s = addSound(`Sound ${n}`, trimQuiet(data, micSR), micSR, false);
+    if (s) status(s.f0 ? `Added “${s.name}” at ${fmtF(s.f0)}. Click its name to rename it.` : `Added “${s.name}”, but no steady pitch was found, so it can only crossfade. A steadier, louder note blends better.`);
+  }
+  function micUI() {
+    $('micBtn').setAttribute('aria-pressed', !!mic); $('micLabel').textContent = mic ? 'Microphone on' : 'Microphone off';
+    $('recBtn').setAttribute('aria-pressed', recording); $('recBtn').textContent = recording ? '■ Stop' : '● Record a sound';
+    if (!recording) $('recTime').textContent = `up to ${REC_MAX} s`;
+  }
+  $('micBtn').onclick = () => mic ? stopMic() : startMic();
+  $('recBtn').onclick = () => recording ? stopRec() : startRec();
+
+  // ================= drawing =================
+  function fit(c) {
+    const dpr = window.devicePixelRatio || 1, r = c.getBoundingClientRect();
+    const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { g, w: r.width, h: r.height };
+  }
+  const font = (px, wt = 500) => `${wt} ${px}px ${css('--font-body')}`;
+  function drawSquare() {
+    const { g, w, h } = fit($('square'));
+    g.clearRect(0, 0, w, h);
+    const pad = 22, side = Math.min(w, h) - 2 * pad;
+    sqGeom = { pad, side };
+    g.strokeStyle = css('--grid'); g.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) { const v = pad + side * i / 4; g.beginPath(); g.moveTo(pad, v); g.lineTo(pad + side, v); g.stroke(); g.beginPath(); g.moveTo(v, pad); g.lineTo(v, pad + side); g.stroke(); }
+    g.strokeStyle = css('--line'); g.strokeRect(pad, pad, side, side);
+    const X = s => pad + s.x * side, Y = s => pad + s.y * side;
+    const live = panel === 'square' && current && pt;
+    if (live) {
+      const cx = pad + pt.x * side, cy = pad + pt.y * side;
+      sounds.forEach((s, i) => { const wi = current[i] || 0; if (wi < 0.01) return; g.strokeStyle = colorOf(s); g.globalAlpha = 0.25 + 0.75 * wi; g.lineWidth = 1 + 7 * wi; g.beginPath(); g.moveTo(cx, cy); g.lineTo(X(s), Y(s)); g.stroke(); });
+      g.globalAlpha = 1;
+    }
+    sounds.forEach((s, i) => {
+      const wi = live ? current[i] || 0 : 0;
+      g.fillStyle = colorOf(s); g.globalAlpha = 0.18; g.beginPath(); g.arc(X(s), Y(s), DOT + 6 + 14 * wi, 0, 2 * Math.PI); g.fill();
+      g.globalAlpha = 1; g.beginPath(); g.arc(X(s), Y(s), DOT, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = css('--ink'); g.font = font(12, 600); g.textAlign = s.x > 0.75 ? 'right' : s.x < 0.25 ? 'left' : 'center'; g.textBaseline = s.y > 0.8 ? 'bottom' : 'top';
+      const ox = s.x > 0.75 ? DOT : s.x < 0.25 ? -DOT : 0;
+      g.fillText(s.name, X(s) + ox, Y(s) + (s.y > 0.8 ? -DOT - 6 : DOT + 6));
+    });
+    if (pt && panel === 'square') {
+      const cx = pad + pt.x * side, cy = pad + pt.y * side;
+      g.strokeStyle = css('--ink'); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 9, 0, 2 * Math.PI); g.stroke();
+      g.beginPath(); g.moveTo(cx - 15, cy); g.lineTo(cx - 5, cy); g.moveTo(cx + 5, cy); g.lineTo(cx + 15, cy); g.moveTo(cx, cy - 15); g.lineTo(cx, cy - 5); g.moveTo(cx, cy + 5); g.lineTo(cx, cy + 15); g.stroke();
+    }
+    if (!sounds.length) { g.fillStyle = css('--muted'); g.font = font(13, 400); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Record a sound or add the examples', w / 2, h / 2); }
+  }
+  function mixText(w) {
+    if (!w) return '';
+    return sounds.map((s, i) => [s, w[i] || 0]).filter(([, v]) => v >= 0.01).sort((a, b) => b[1] - a[1])
+      .map(([s, v]) => `<b style="color:${colorOf(s)}">${esc(s.name)}</b> ${Math.round(v * 100)}%`).join(' · ');
+  }
+  const F_LO = 50, F_HI = 8000, DB_LO = -60;
+  function drawResult() {
+    const { g, w, h } = fit($('result'));
+    g.clearRect(0, 0, w, h);
+    const pad = { l: 38, r: 12, t: 12, b: 24 }, pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
+    const fx = f => pad.l + pw * Math.log(f / F_LO) / Math.log(F_HI / F_LO), dy = d => pad.t + ph * clamp(d, DB_LO, 0) / DB_LO;
+    g.strokeStyle = css('--grid'); g.lineWidth = 1; g.fillStyle = css('--muted'); g.font = `11px ${css('--font-data')}`; g.textBaseline = 'top';
+    [50, 100, 200, 500, 1000, 2000, 5000, 8000].forEach((f, i, a) => { const x = fx(f); g.beginPath(); g.moveTo(x, pad.t); g.lineTo(x, pad.t + ph); g.stroke(); g.textAlign = i === 0 ? 'left' : i === a.length - 1 ? 'right' : 'center'; g.fillText(f >= 1000 ? f / 1000 + 'k' : f, x, pad.t + ph + 6); });
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    [0, -20, -40, -60].forEach(d => { const y = dy(d); g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + pw, y); g.stroke(); if (d > DB_LO) g.fillText(d, pad.l - 6, y); });
+    const wv = current || [];
+    sounds.forEach((s, i) => {
+      if (!s.f0) return;
+      const wi = wv[i] || 0;
+      g.beginPath(); let st = false;
+      for (let x = 0; x <= pw; x += 2) { const f = F_LO * Math.pow(F_HI / F_LO, x / pw); if (f < s.H[0].f * 0.7) continue; const y = dy(envAt(s, f)); st ? g.lineTo(pad.l + x, y) : g.moveTo(pad.l + x, y); st = true; }
+      g.strokeStyle = colorOf(s); g.globalAlpha = playing ? 0.2 + 0.8 * wi : 0.55; g.lineWidth = playing ? 1 + 2 * wi : 1.5; g.stroke(); g.globalAlpha = 1;
+    });
+    if (playing && blend) {
+      g.strokeStyle = g.fillStyle = css('--ink'); g.lineWidth = 1.5;
+      blend.parts.forEach(p => { if (p.f < F_LO || p.f > F_HI) return; const x = fx(p.f), y = dy(20 * Math.log10(p.a)); g.beginPath(); g.moveTo(x, pad.t + ph); g.lineTo(x, y); g.stroke(); g.beginPath(); g.arc(x, y, 2.5, 0, 2 * Math.PI); g.fill(); });
+    }
+    const mix = mixText(current);
+    $('resOut').innerHTML = !playing ? 'Nothing playing. Press and drag on the line or in the square.'
+      : mode === 'crossfade' ? `Crossfade: the recordings themselves, mixed by volume · ${mix}`
+      : blend ? `Pitch <b>${fmtF(blend.f0)}</b> (${noteName(blend.f0)}) · ${blend.parts.length} harmonics · ${mix}` : `Only sounds without a steady pitch are in play, so you hear their recordings · ${mix}`;
+    $('lineOut').innerHTML = panel === 'line' && current ? `${Math.round((1 - lineT) * 100)}% left · ${Math.round(lineT * 100)}% right` + (playing && blend ? ` · pitch <b>${fmtF(blend.f0)}</b>` : '') : 'Press and drag the slider to hear the blend.';
+    $('sqOut').innerHTML = panel === 'square' && current && pt ? mix : sqMode === 'arrange' ? 'Drag the dots to place your sounds.' : 'Press and drag inside the square.';
+  }
+  function frame() {
+    if (mic) $('meterFill').style.width = Math.min(100, lastRms * 600) + '%';
+    if (recording) $('recTime').textContent = `${(recLen / micSR).toFixed(1)} s of ${REC_MAX} s`;
+    if (dirty) { dirty = false; drawSquare(); drawResult(); }
+    requestAnimationFrame(frame);
+  }
+  new ResizeObserver(() => { dirty = true; }).observe(document.querySelector('.wrap'));
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { dirty = true; renderSelects(); });
+  new MutationObserver(() => { dirty = true; renderSelects(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (document.fonts) document.fonts.ready.then(() => { dirty = true; });
+
+  fillR($('level')); fillR($('lineT'));
+  addExamples();
+  status('Four example vowels are loaded so you can try the line and the square right away. Record your own to add to them, and delete the examples with ×.');
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

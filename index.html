@@ -252,6 +252,35 @@ button:disabled:hover { border-color: var(--line); }
 #recBtn[aria-pressed="true"] { background: var(--a); color: var(--on-ab); border-color: transparent; }
 .vstatus { margin: 0; font-size: 12.5px; color: var(--muted); }
 .vrow.syn { padding-top: 10px; border-top: 1px solid var(--grid); }
+
+/* filter */
+.bands { display: grid; gap: 6px; }
+.band { display: grid; grid-template-columns: 118px minmax(80px,1.4fr) 92px minmax(70px,1fr) 44px minmax(70px,1fr) 62px 26px; gap: 8px 10px; align-items: center; padding: 6px 10px; border: 1px solid var(--glass-line); border-radius: 12px; background: var(--screen); }
+.band.bhdr { background: transparent; border-color: transparent; padding-block: 0; font: 500 10px/1 var(--font-display); text-transform: uppercase; letter-spacing: .2em; color: var(--muted); }
+.band select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--solid); font-size: 12.5px; }
+.band input[type=number] { width: 100%; padding: 5px 7px; border: 1px solid transparent; border-radius: 7px; background: var(--chip); font: 500 13px var(--font-data); font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.band input[type=range] { width: 100%; }
+.band .readout { font-size: 12px; text-align: right; }
+@media (max-width: 760px) { .band { grid-template-columns: 1fr 1fr; } .band.bhdr { display: none; } }
+.fnote { font-size: 12.5px; color: var(--muted); }
+.navlink { font: 500 11px/1 var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--hero-ink); text-decoration: none; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--hero-line); background: var(--hero-glass); }
+.navlink:hover { border-color: var(--hero-ink); }
+
+/* guide */
+details.guide { padding: 0; }
+details.guide > summary { list-style: none; cursor: pointer; padding: 16px 18px; display: flex; align-items: center; gap: 12px; }
+details.guide > summary::-webkit-details-marker { display: none; }
+details.guide > summary h2 { font: 500 12px/1 var(--font-display); text-transform: uppercase; letter-spacing: .24em; margin: 0; }
+details.guide > summary .note { color: var(--muted); font-size: 12.5px; }
+details.guide > summary::after { content: "+"; margin-left: auto; font: 300 22px/1 var(--font-display); color: var(--muted); }
+details.guide[open] > summary::after { content: "−"; }
+.gwrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 18px; padding: 0 18px 18px; }
+.gstep { border: 1px solid var(--glass-line); background: var(--screen); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+.gstep h3 { margin: 0 0 8px; font: 500 15px/1.3 var(--font-display); letter-spacing: .02em; }
+.gstep h3 small { display: block; font: 500 10.5px/1.4 var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.gstep ol { margin: 0; padding-left: 20px; display: grid; gap: 5px; font-size: 13.5px; }
+.gstep p { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+.gstep b { font-weight: 600; }
 .vrow.syn input[type=range] { width: 180px; }
 
 /* gesture */
@@ -302,6 +331,7 @@ footer b { color: var(--ink); font-weight: 600; }
         </div>
       </div>
       <div class="hgroup"><label class="lbl" for="level">Level</label><input id="level" type="range" min="0" max="100" value="35"><span class="readout" id="levelOut">35%</span></div>
+      <a class="navlink" href="morph.html">Morph Lab →</a>
       <button id="power" class="power" aria-pressed="false"><span class="led"></span><span id="powerLabel">Sound off</span></button>
     </nav>
     <div class="herotext">
@@ -311,6 +341,67 @@ footer b { color: var(--ink); font-weight: 600; }
     </div>
   </header>
 
+
+  <details class="panel guide" id="guide">
+    <summary><h2>How to do the assignments</h2><span class="note">step by step, for both weeks</span></summary>
+    <div class="gwrap">
+      <div class="gstep">
+        <h3><small>Week 1 · part 1</small>See your voice</h3>
+        <ol>
+          <li>Put on headphones, then press <b>Microphone on</b> and allow the microphone.</li>
+          <li>Sing or say a steady “aaah”.</li>
+          <li>Watch the <b>Waveform</b> (the shape repeats once per cycle) and the <b>Spectrum</b> (one bump per harmonic).</li>
+        </ol>
+      </div>
+      <div class="gstep">
+        <h3><small>Week 1 · part 2</small>Rebuild a vowel by hand</h3>
+        <ol>
+          <li>Press <b>Record</b>, hold a vowel for 3 s, press <b>Stop</b>, then turn the microphone off.</li>
+          <li>Press <b>Use as base frequency</b>, set Count to <b>20</b> and press <b>Make …</b> in Generate.</li>
+          <li>In the Spectrum, hover each voice peak and type its amplitude into the matching row of Sound A.</li>
+          <li>Listen with <b>Hear → Voice⇄A</b> and adjust until it sounds close.</li>
+          <li>Name it (e.g. <b>ah-low</b>), press <b>Save original .wav</b> and <b>Save A .wav</b>.</li>
+          <li>Repeat at a higher pitch and note what changes.</li>
+        </ol>
+      </div>
+      <div class="gstep">
+        <h3><small>Week 1 · part 3</small>Rebuild it automatically</h3>
+        <ol>
+          <li>Record a vowel as above.</li>
+          <li>Press <b>Synthesize from recording</b> and listen with <b>Voice⇄A</b>.</li>
+          <li>Move <b>Change pitch</b>, then listen with <b>A⇄B</b>: A keeps the vowel, B is the plain copy.</li>
+        </ol>
+      </div>
+      <div class="gstep">
+        <h3><small>Week 2 · part 1</small>Try a filter</h3>
+        <ol>
+          <li>In Generate, make 20 multiples of 150 Hz with <b>all equal</b> amplitudes.</li>
+          <li>In <b>Filter</b>, press the <b>Low-pass</b> preset and tick <b>Filter A</b>.</li>
+          <li>Move the band's <b>Frequency</b>: the high harmonics fade and the sound gets darker. Try High-pass and Band-pass too.</li>
+        </ol>
+        <p>The solid line on the Spectrum is the filter; A's dots show each harmonic after the filter.</p>
+      </div>
+      <div class="gstep">
+        <h3><small>Week 2 · part 2</small>Vowels from a flat source and a filter</h3>
+        <ol>
+          <li>Record a vowel in the Voice panel (or skip this and use a preset).</li>
+          <li>Press <b>Fill A with a flat source</b>: every harmonic of your pitch at amplitude 1.</li>
+          <li>Press a vowel preset (<b>ah</b>, <b>ee</b>, <b>oo</b>, <b>eh</b>) or <b>Fit to my recording</b>.</li>
+          <li>Move each band until A's dots follow your voice curve. Compare with <b>Voice⇄A</b>.</li>
+          <li>Save with <b>Save A .wav</b>. Video: about 1 minute.</li>
+        </ol>
+      </div>
+      <div class="gstep">
+        <h3><small>Week 2 · parts 3 and 4</small>Morph between sounds</h3>
+        <ol>
+          <li>Open <a href="morph.html">Morph Lab</a>.</li>
+          <li>Record two or more sounds; each becomes a dot.</li>
+          <li>Part 3: pick two sounds on the <b>Line</b> and drag its slider.</li>
+          <li>Part 4: press and drag inside the <b>Square</b>.</li>
+        </ol>
+      </div>
+    </div>
+  </details>
   <section class="panel voice" id="voicePanel">
     <div class="phead">
       <h2>Voice</h2><span class="note">record a vowel and see it beside your synthesized sound</span>
@@ -388,6 +479,33 @@ footer b { color: var(--ink); font-weight: 600; }
         <button class="go" id="cmpMissing">A: multiples · B: fundamental removed</button>
       </div>
     </div>
+  </section>
+
+
+  <section class="panel" id="filterPanel">
+    <div class="phead">
+      <h2>Filter</h2><span class="note">shapes a sound after its harmonics are made, the way your mouth shapes your voice</span>
+      <div class="tools">
+        <label class="chk a"><input type="checkbox" id="filtA"> Filter A</label>
+        <label class="chk b"><input type="checkbox" id="filtB"> Filter B</label>
+      </div>
+    </div>
+    <div class="frow">
+      <span class="lbl">Presets</span>
+      <div class="seg" id="fPresets">
+        <button data-v="lowpass">Low-pass</button><button data-v="highpass">High-pass</button><button data-v="bandpass">Band-pass</button>
+        <button data-v="ah">ah</button><button data-v="ee">ee</button><button data-v="oo">oo</button><button data-v="eh">eh</button>
+      </div>
+      <button id="fFit" disabled title="Find the resonances of your recording and turn them into bands">Fit to my recording</button>
+      <button id="fAdd">+ Add band</button>
+      <button id="fClear">Clear bands</button>
+    </div>
+    <div class="frow">
+      <button class="go" id="fSource">Fill A with a flat source</button>
+      <span class="fnote">every harmonic of your voice's pitch (or the Generate base) at amplitude 1, up to 6 kHz</span>
+    </div>
+    <div class="bands" id="bands"></div>
+    <p class="vstatus" id="fStatus" role="status">The bands below are the “ah” preset. Tick Filter A to hear sound A through them.</p>
   </section>
 
   <section class="panel">
@@ -687,13 +805,18 @@ footer b { color: var(--ink); font-weight: 600; }
   $('cmpMissing').onclick = () => compare(A => A.slice(1).map(p => ({ ...p })));
 
   // ================= audio =================
+  let fDry = null, fWet = null, fIn = null;
   let ctx = null, comp = null, master = null, recGain = null, recSrc = null, bank = [], on = false, level = 0.35, hear = 'A', altCur = 'A', altTimer = null;
   const heard = () => hear === 'alt' || hear === 'RA' ? altCur : hear;
   function ensureCtx() {
     if (ctx) return;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     comp = ctx.createDynamicsCompressor(); comp.threshold.value = -8; comp.ratio.value = 6; comp.connect(ctx.destination);
-    master = ctx.createGain(); master.gain.value = 0; master.connect(comp);
+    master = ctx.createGain(); master.gain.value = 0;
+    // master → dry → out, or master → filter bands (side by side) → wet → out
+    fDry = ctx.createGain(); fWet = ctx.createGain(); fIn = ctx.createGain(); fWet.gain.value = 0;
+    master.connect(fDry); fDry.connect(comp); master.connect(fIn); fWet.connect(comp);
+    rebuildFilterNodes();
     recGain = ctx.createGain(); recGain.gain.value = 0; recGain.connect(comp);
   }
   function recPlay(want) {
@@ -707,8 +830,9 @@ footer b { color: var(--ink); font-weight: 600; }
     ['A', 'B'].forEach(k => $('slot' + k).classList.toggle('sounding', on && h === k));
     $('voicePanel').classList.toggle('sounding', on && h === 'R');
     if (!ctx) return;
-    const t = ctx.currentTime, P = h === 'R' ? [] : active(slots[h]), sum = P.reduce((s, p) => s + p.a, 0);
-    master.gain.setTargetAtTime(on && sum ? level / Math.max(1, sum) : 0, t, 0.03);
+    const t = ctx.currentTime, P = h === 'R' ? [] : active(slots[h]), sum = P.reduce((s, p) => s + p.a, 0), useF = h !== 'R' && filtered(h);
+    master.gain.setTargetAtTime(!on || !sum ? 0 : useF ? level / Math.max(filteredSum(h), 0.05) : level / Math.max(1, sum), t, 0.03);
+    fDry.gain.setTargetAtTime(useF ? 0 : 1, t, 0.02); fWet.gain.setTargetAtTime(useF ? 1 : 0, t, 0.02);
     recGain.gain.setTargetAtTime(on && h === 'R' && rec ? level * 0.9 / rec.peak : 0, t, 0.02);
     recPlay(on && h === 'R');
     P.forEach((p, i) => {
@@ -888,6 +1012,7 @@ footer b { color: var(--ink); font-weight: 600; }
     $('pitchNote').textContent = p ? noteName(p) : mic ? 'no steady pitch' : '';
     $('useF0').disabled = !p;
     $('synBtn').disabled = !(rec && rec.db && rec.pitch);
+    $('fFit').disabled = !(rec && rec.db && rec.pitch);
   }
   // what the waveform shows for the voice: the latest live samples (triggered on a rising zero crossing), or the recording
   function voiceView() {
@@ -954,10 +1079,10 @@ footer b { color: var(--ink); font-weight: 600; }
   const fname = suffix => ($('vName').value.trim() || 'sound').replace(/[^\w.-]+/g, '-') + suffix;
   // the synthesized sound, as long as the recording (3 s if none), peak matched to the recording
   function saveSynth(k) {
-    const P = active(slots[k]);
+    const P = effective(k);
     if (!P.length) { vStatus(`Sound ${k} is silent. Add some frequencies first.`); return; }
     const sr = 48000, n = Math.round((rec ? clamp(rec.dur, 1, REC_MAX) : 3) * sr), out = new Float32Array(n);
-    P.forEach(p => { const w = 2 * Math.PI * p.f / sr; for (let i = 0; i < n; i++) out[i] += p.a * Math.sin(w * i); });
+    P.forEach(p => { const w = 2 * Math.PI * p.f / sr; for (let i = 0; i < n; i++) out[i] += p.a * Math.sin(w * i + p.ph); });
     let pk = 0; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(out[i]));
     const g = (rec ? Math.min(rec.peak, 0.95) : 0.8) / (pk || 1), fade = Math.round(0.02 * sr);
     for (let i = 0; i < n; i++) out[i] *= g * Math.min(1, i / fade, (n - 1 - i) / fade);
@@ -1035,6 +1160,163 @@ footer b { color: var(--ink); font-weight: 600; }
   };
   $('showV').addEventListener('change', () => dirty = true);
 
+  // ================= filter =================
+  // A bank of bands side by side: the sound goes through every band and the outputs are added.
+  // Each band is a Web Audio biquad plus a level; the same formulas run here, so views, files and sound agree.
+  const FTYPES = { bandpass: 'Band-pass', lowpass: 'Low-pass', highpass: 'High-pass', peaking: 'Peak' };
+  const filt = { A: false, B: false };
+  let bands = [], fNodes = [];
+  const fsr = () => ctx ? ctx.sampleRate : 48000;
+  const fStatus = t => { $('fStatus').textContent = t; };
+  function coefs(b, sr) {
+    const w0 = 2 * Math.PI * clamp(b.f, 10, sr / 2 - 10) / sr, cs = Math.cos(w0), al = Math.sin(w0) / (2 * b.q);
+    let b0, b1, b2, a0, a1, a2;
+    if (b.type === 'lowpass') { b0 = (1 - cs) / 2; b1 = 1 - cs; b2 = b0; a0 = 1 + al; a1 = -2 * cs; a2 = 1 - al; }
+    else if (b.type === 'highpass') { b0 = (1 + cs) / 2; b1 = -(1 + cs); b2 = b0; a0 = 1 + al; a1 = -2 * cs; a2 = 1 - al; }
+    else if (b.type === 'peaking') { const A = Math.pow(10, b.db / 40); b0 = 1 + al * A; b1 = -2 * cs; b2 = 1 - al * A; a0 = 1 + al / A; a1 = -2 * cs; a2 = 1 - al / A; }
+    else { b0 = al; b1 = 0; b2 = -al; a0 = 1 + al; a1 = -2 * cs; a2 = 1 - al; }
+    return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
+  }
+  const bandOut = b => b.type === 'peaking' ? 1 : Math.pow(10, b.db / 20);
+  // the whole bank's response at f: [size, phase shift]
+  function filterAt(f) {
+    if (!bands.length) return [1, 0];
+    const sr = fsr(), w = 2 * Math.PI * f / sr, c1 = Math.cos(w), s1 = Math.sin(w), c2 = Math.cos(2 * w), s2 = Math.sin(2 * w);
+    let re = 0, im = 0;
+    bands.forEach(b => {
+      const [b0, b1, b2, a1, a2] = coefs(b, sr), g = bandOut(b);
+      const nr = b0 + b1 * c1 + b2 * c2, ni = -(b1 * s1 + b2 * s2), dr = 1 + a1 * c1 + a2 * c2, di = -(a1 * s1 + a2 * s2), dd = dr * dr + di * di;
+      re += g * (nr * dr + ni * di) / dd; im += g * (ni * dr - nr * di) / dd;
+    });
+    return [Math.hypot(re, im), Math.atan2(im, re)];
+  }
+  const filtered = k => filt[k] && bands.length > 0;
+  // a sound as it leaves the filter: each amplitude × the filter's size there, plus its phase shift; loudest scaled to 1
+  function effective(k) {
+    const P = active(slots[k]);
+    if (!filtered(k)) return P.map(p => ({ f: p.f, a: p.a, a0: p.a, ph: 0, on: true }));
+    const E = P.map(p => { const [m, ph] = filterAt(p.f); return { f: p.f, a: p.a * m, a0: p.a, ph, on: true }; });
+    const top = Math.max(...E.map(e => e.a), 1e-12); E.forEach(e => { e.a /= top; });
+    return E;
+  }
+  const filteredSum = k => active(slots[k]).reduce((s, p) => s + p.a * filterAt(p.f)[0], 0);
+
+  function rebuildFilterNodes() {
+    if (!ctx) return;
+    fNodes.forEach(n => { n.bq.disconnect(); n.g.disconnect(); }); fIn.disconnect();
+    fNodes = bands.map(() => { const bq = ctx.createBiquadFilter(), g = ctx.createGain(); fIn.connect(bq); bq.connect(g); g.connect(fWet); return { bq, g }; });
+    setFilterParams();
+  }
+  function setFilterParams() {
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    bands.forEach((b, i) => {
+      const n = fNodes[i]; if (!n) return;
+      n.bq.type = b.type;
+      n.bq.frequency.setTargetAtTime(b.f, t, 0.01);
+      n.bq.Q.setTargetAtTime(b.type === 'lowpass' || b.type === 'highpass' ? 20 * Math.log10(b.q) : b.q, t, 0.01);   // Web Audio takes low/high-pass Q in dB
+      n.bq.gain.setTargetAtTime(b.type === 'peaking' ? b.db : 0, t, 0.01);
+      n.g.gain.setTargetAtTime(bandOut(b), t, 0.01);
+    });
+  }
+  function filterChanged(structure) { if (structure) rebuildFilterNodes(); else setFilterParams(); syncAudio(); dirty = true; }
+
+  // ---- band rows ----
+  const fToS = f => Math.round(1000 * Math.log(f / 30) / Math.log(400)), sToF = v => 30 * Math.pow(400, v / 1000);
+  const qToS = q => Math.round(1000 * Math.log(q / 0.3) / Math.log(40 / 0.3)), sToQ = v => 0.3 * Math.pow(40 / 0.3, v / 1000);
+  const fmtDb = d => `${d > 0 ? '+' : ''}${d} dB`;
+  function renderBands() {
+    $('bands').innerHTML = bands.length ? `<div class="band bhdr" aria-hidden="true"><span>Type</span><span>Frequency</span><span></span><span>Width (Q)</span><span></span><span>Level</span><span></span><span></span></div>` + bands.map((b, i) => `<div class="band" data-i="${i}">
+      <select class="bt" aria-label="Band ${i + 1} type">${Object.entries(FTYPES).map(([v, l]) => `<option value="${v}"${v === b.type ? ' selected' : ''}>${l}</option>`).join('')}</select>
+      <input type="range" class="bf" min="0" max="1000" value="${fToS(b.f)}" aria-label="Band ${i + 1} frequency">
+      <span class="fwrap"><input type="number" class="bfn" min="30" max="12000" step="any" value="${Math.round(b.f)}" aria-label="Band ${i + 1} frequency in hertz"><i>Hz</i></span>
+      <input type="range" class="bq" min="0" max="1000" value="${qToS(b.q)}" aria-label="Band ${i + 1} width, Q">
+      <span class="readout bqo">${b.q.toFixed(1)}</span>
+      <input type="range" class="bl" min="-40" max="12" step="0.5" value="${b.db}" aria-label="Band ${i + 1} level in dB">
+      <span class="readout blo">${fmtDb(b.db)}</span>
+      <button type="button" class="pdel" aria-label="Remove band ${i + 1}">×</button></div>`).join('')
+      : '<div class="empty">No filter bands. Pick a preset, press Fit to my recording, or add a band.</div>';
+    $('bands').querySelectorAll('input[type=range]').forEach(fillR);
+  }
+  $('bands').addEventListener('input', e => {
+    const row = e.target.closest('.band[data-i]'); if (!row) return;
+    const b = bands[+row.dataset.i], c = e.target.classList;
+    if (c.contains('bf')) { b.f = sToF(+e.target.value); row.querySelector('.bfn').value = Math.round(b.f); }
+    else if (c.contains('bfn')) { const v = parseFloat(e.target.value); if (!(v >= 30 && v <= 12000)) return; b.f = v; const sl = row.querySelector('.bf'); sl.value = fToS(v); fillR(sl); }
+    else if (c.contains('bq')) { b.q = sToQ(+e.target.value); row.querySelector('.bqo').textContent = b.q.toFixed(1); }
+    else if (c.contains('bl')) { b.db = +e.target.value; row.querySelector('.blo').textContent = fmtDb(b.db); }
+    else return;
+    filterChanged(false);
+  });
+  $('bands').addEventListener('change', e => {
+    if (!e.target.classList.contains('bt')) return;
+    bands[+e.target.closest('.band').dataset.i].type = e.target.value; filterChanged(true);
+  });
+  $('bands').addEventListener('click', e => {
+    const d = e.target.closest('.pdel'); if (!d) return;
+    bands.splice(+d.closest('.band').dataset.i, 1); renderBands(); filterChanged(true);
+  });
+  const autoOn = () => { if (!filt.A && !filt.B) { filt.A = true; $('filtA').checked = true; } };
+  $('filtA').addEventListener('change', e => { filt.A = e.target.checked; filterChanged(false); });
+  $('filtB').addEventListener('change', e => { filt.B = e.target.checked; filterChanged(false); });
+
+  // ---- presets: average resonances (formants) of adult voices, higher-voice values; Q = frequency ÷ bandwidth ----
+  const VOWELS = {
+    ah: [[850, 0, 90], [1220, -5, 110], [2810, -14, 170]],
+    ee: [[310, 0, 60], [2790, -12, 120], [3310, -16, 170]],
+    oo: [[370, 0, 70], [950, -8, 100], [2670, -22, 160]],
+    eh: [[610, 0, 80], [2330, -8, 120], [2990, -12, 170]],
+  };
+  function preset(v) {
+    if (v === 'lowpass') bands = [{ type: 'lowpass', f: 1000, q: 0.7, db: 0 }];
+    else if (v === 'highpass') bands = [{ type: 'highpass', f: 800, q: 0.7, db: 0 }];
+    else if (v === 'bandpass') bands = [{ type: 'bandpass', f: 1000, q: 4, db: 0 }];
+    else bands = VOWELS[v].map(([f, db, bw]) => ({ type: 'bandpass', f, q: +(f / bw).toFixed(2), db }));
+    return v;
+  }
+  $('fPresets').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const v = preset(b.dataset.v); renderBands(); autoOn(); filterChanged(true);
+    fStatus(VOWELS[v] ? `“${v}” resonances loaded: ${bands.map(x => fmtF(x.f)).join(', ')}. These are averages; move them to match your own voice.` : `${FTYPES[v]} loaded. Move its Frequency and listen to how the sound changes.`);
+  });
+  $('fAdd').onclick = () => {
+    if (bands.length >= 6) { fStatus('Up to 6 bands.'); return; }
+    bands.push({ type: 'bandpass', f: 1500, q: 8, db: -6 }); renderBands(); autoOn(); filterChanged(true);
+  };
+  $('fClear').onclick = () => { bands = []; renderBands(); filterChanged(true); fStatus('Bands cleared. With no bands, the filter lets everything through.'); };
+  function flatSource(f0) {
+    const P = [];
+    for (let n = 1; n * f0 <= 6000 && n <= MAXP; n++) P.push({ f: +(n * f0).toFixed(2), a: 1, on: true });
+    setSlot('A', P); filt.A = true; $('filtA').checked = true; filterChanged(false);
+  }
+  $('fSource').onclick = () => {
+    const f0 = vPitch() || clamp(+$('hF0').value || 220, 20, 2000);
+    flatSource(f0);
+    fStatus(`Sound A is now every harmonic of ${fmtF(f0)} at amplitude 1, up to 6 kHz, through the filter. Pick a vowel preset or press Fit to my recording.`);
+  };
+  // ---- fit: the loudest harmonics that stand above their neighbours are the resonances ----
+  function fitRecording() {
+    if (!rec || !rec.db || !rec.pitch) { fStatus('Record a steady vowel in the Voice panel first.'); return; }
+    const { f0, H } = analyseVowel();
+    const peaks = H.filter((h, i) => h.db > -30 && h.f > 150 && (i === 0 || h.db >= H[i - 1].db) && (i === H.length - 1 || h.db > H[i + 1].db))
+      .sort((a, b) => b.db - a.db).slice(0, 4).sort((a, b) => a.f - b.f);
+    if (!peaks.length) { fStatus('No clear resonances were found. Try a louder, steadier vowel.'); return; }
+    bands = peaks.map(h => {
+      const i = H.indexOf(h), lo = H[i - 1], hi = H[i + 1];
+      // centre: a parabola through the peak and its neighbours, in steps of one harmonic
+      let fc = h.f;
+      if (lo && hi) { const den = lo.db - 2 * h.db + hi.db; if (den) fc = h.f + clamp(0.5 * (lo.db - hi.db) / den, -0.5, 0.5) * f0; }
+      // width: the Q that makes a band-pass drop as much as the voice drops at the neighbouring harmonics
+      const qs = [lo, hi].filter(Boolean).map(n => { const drop = Math.max(0.5, h.db - n.db), x = Math.abs(n.f / fc - fc / n.f); return Math.sqrt(Math.pow(10, drop / 10) - 1) / x; });
+      const q = qs.length ? qs.reduce((s, v) => s + v, 0) / qs.length : 5;
+      return { type: 'bandpass', f: Math.round(fc), q: +clamp(q, 1, 30).toFixed(2), db: Math.round(h.db * 2) / 2 };
+    });
+    renderBands(); flatSource(f0); filterChanged(true); setHear('RA');
+    fStatus(`Found ${bands.length} resonances in your recording: ${bands.map(b => fmtF(b.f)).join(', ')}. Sound A is a flat source at ${fmtF(f0)} through them. Listening switches to Voice⇄A.`);
+  }
+  $('fFit').onclick = fitRecording;
+  preset('ah'); renderBands();
+
   // ================= drawing helpers =================
   function fit(c) {
     const dpr = window.devicePixelRatio || 1, r = c.getBoundingClientRect();
@@ -1046,9 +1328,9 @@ footer b { color: var(--ink); font-weight: 600; }
   const MONO = () => `11px ${css('--font-data')}`;
   function prep(P) {
     const A = active(P);
-    return { w: Float64Array.from(A, p => 2 * Math.PI * p.f), a: Float64Array.from(A, p => p.a), fmax: A.length ? Math.max(...A.map(p => p.f)) : 0, sum: A.reduce((s, p) => s + p.a, 0) };
+    return { w: Float64Array.from(A, p => 2 * Math.PI * p.f), a: Float64Array.from(A, p => p.a), ph: Float64Array.from(A, p => p.ph || 0), fmax: A.length ? Math.max(...A.map(p => p.f)) : 0, sum: A.reduce((s, p) => s + p.a, 0) };
   }
-  function val(S, t) { let s = 0; for (let i = 0; i < S.w.length; i++) s += S.a[i] * Math.sin(S.w[i] * t); return s; }
+  function val(S, t) { let s = 0; for (let i = 0; i < S.w.length; i++) s += S.a[i] * Math.sin(S.w[i] * t + S.ph[i]); return s; }
   const hash = (x, k) => { const s = Math.sin(x * 12.9898 + k * 78.233) * 43758.5453; return s - Math.floor(s); };
   function niceStep(span, target) { const raw = span / target, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
 
@@ -1092,8 +1374,8 @@ footer b { color: var(--ink); font-weight: 600; }
     g.strokeStyle = css('--line'); g.beginPath(); g.moveTo(pad.l, mid); g.lineTo(pad.l + pw, mid); g.stroke();
 
     const vis = [];
-    if ($('showA').checked) vis.push(['A', prep(slots.A), css('--a')]);
-    if ($('showB').checked) vis.push(['B', prep(slots.B), css('--b')]);
+    if ($('showA').checked) vis.push(['A', prep(effective('A')), css('--a')]);
+    if ($('showB').checked) vis.push(['B', prep(effective('B')), css('--b')]);
     const series = vis.filter(v => v[1].w.length).map(([k, S, col]) => {
       if (S.fmax * winSec / pw <= 0.2) {           // ≥ 5 px per cycle: draw the exact line
         const n = Math.ceil(pw * 2), ys = new Float32Array(n + 1);
@@ -1213,12 +1495,20 @@ footer b { color: var(--ink); font-weight: 600; }
       }
       g.setLineDash([5, 4]); g.strokeStyle = css('--accent'); g.lineWidth = 1.5; g.stroke(); g.setLineDash([]);
     }
+    if (bands.length && ((filt.A && $('showA').checked) || (filt.B && $('showB').checked))) {
+      // the filter's response, its highest point at the top, like the scaled stems
+      const R = []; let top = 0;
+      for (let x = 0; x <= pw; x += 2) { const m = filterAt(xf(pad.l + x))[0]; R.push([pad.l + x, m]); top = Math.max(top, m); }
+      g.beginPath();
+      R.forEach(([x, m], i) => { const r = m / (top || 1), y = specMode === 'db' ? pad.t + ph * clamp(20 * Math.log10(r + 1e-9), DB_LO, 0) / DB_LO : pad.t + ph * (1 - r); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+      g.strokeStyle = css('--accent'); g.globalAlpha = 0.75; g.lineWidth = 2; g.stroke(); g.globalAlpha = 1;
+    }
 
     const stems = [];
     [['A', css('--a')], ['B', css('--b')]].forEach(([k, col]) => {
       if (!$('show' + k).checked) return;
       const fmin = lowest(slots[k]);
-      active(slots[k]).forEach(p => {
+      effective(k).forEach(p => {
         if (p.f < SF_LO || p.f > SF_HI) return;
         const x = fx(p.f), y = ya(p.a);
         stems.push({ k, p, x, y, fmin });
@@ -1244,7 +1534,7 @@ footer b { color: var(--ink); font-weight: 600; }
     const vtxt = vdb != null && isFinite(vdb) ? ` · <span class="kv">Voice</span> here <b>${vdb.toFixed(1)} dB</b> (amplitude ${Math.pow(10, vdb / 20).toFixed(2)})` : '';
     if (best) {
       const r = best.p.f / best.fmin, int = Math.abs(r - Math.round(r)) < 0.005;
-      $('specHint').innerHTML = `<span class="k${best.k.toLowerCase()}">${best.k}</span> <b>${fmtF(best.p.f)}</b> (${noteName(best.p.f)}) · amplitude <b>${best.p.a.toFixed(2)}</b> (${(20 * Math.log10(best.p.a)).toFixed(1)} dB) · <b>×${int ? Math.round(r) : r.toFixed(3)}</b> the lowest${int ? ', a whole multiple' : ''}${vtxt}`;
+      $('specHint').innerHTML = `<span class="k${best.k.toLowerCase()}">${best.k}</span> <b>${fmtF(best.p.f)}</b> (${noteName(best.p.f)}) · amplitude <b>${best.p.a.toFixed(2)}</b> (${(20 * Math.log10(best.p.a)).toFixed(1)} dB)${filtered(best.k) ? ` after the filter, ${best.p.a0.toFixed(2)} before` : ''} · <b>×${int ? Math.round(r) : r.toFixed(3)}</b> the lowest${int ? ', a whole multiple' : ''}${vtxt}`;
     } else $('specHint').innerHTML = `<b>${fmtF(f)}</b>${vtxt}`;
   });
   $('spec').addEventListener('pointerleave', () => { specHover = null; dirty = true; $('specHint').textContent = "Hover a line to read its frequency. With a voice showing, the hint also reads the voice's level there."; });
