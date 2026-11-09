@@ -10,19 +10,23 @@
 /* Layout: a slim dune header holding the three tabs and Play, a "My sounds" shelf, then the active tab's controls on the left and one large view (waveform + spectrum) on the right.
    Palette from the dune swatches: sky haze #D2D9D8, sand #D9C3A9, dune #BF9B7A, clay #A67458, umber #734B34. */
 :root {
-  --bg: #F2EEE8; --bg-2: #E6E2DA;
-  --glass: rgba(255,255,255,.66); --glass-line: rgba(115,75,52,.12);
-  --screen: rgba(255,255,255,.74); --solid: #FBF9F6;
+  --bg: #ECE6DE;
+  --blob1: rgba(190,205,204,.95); --blob2: rgba(222,196,164,.95); --blob3: rgba(196,152,118,.7); --blob4: rgba(166,116,88,.45);
+  --glass: rgba(255,255,255,.34); --glass-line: rgba(255,255,255,.72); --rim: rgba(255,255,255,.85);
+  --screen: rgba(255,255,255,.3); --solid: #FBF9F6;
+  --field: rgba(255,255,255,.42); --field-line: rgba(255,255,255,.82);
+  --sel-bg: rgba(255,255,255,.95); --sel-ink: #3B261A; --sel-shadow: 0 2px 12px rgba(59,38,26,.14);
+  --cta-1: #8C6049; --cta-2: #6A4532; --cta-ink: #FBF6F0; --cta-glow: rgba(110,74,54,.55);
   --grid: rgba(115,75,52,.09); --line: rgba(115,75,52,.18); --track: rgba(115,75,52,.16);
   --ink: #3B261A; --muted: #7A5A46;
   --a: #A67458; --a-dim: rgba(166,116,88,.16);
   --b: #5F7775; --b-dim: rgba(95,119,117,.2);
   --v: #4A3428; --v-dim: rgba(74,52,40,.12);
-  --accent: #734B34; --pill: #3B261A; --pill-ink: #F2EEE8; --on-ab: #FFFFFF; --chip: rgba(115,75,52,.08);
-  --hero-sky-1: #D2D9D8; --hero-sky-2: #E4DED4; --hero-ink: #4A2F20;
-  --dune-1: #D9C3A9; --dune-2: #BF9B7A; --dune-3: #A67458;
-  --hero-glass: rgba(255,255,255,.42); --hero-line: rgba(59,38,26,.14); --hero-track: rgba(59,38,26,.2);
-  --shadow: 0 1px 2px rgba(59,38,26,.04), 0 12px 32px -18px rgba(59,38,26,.22);
+  --accent: #734B34; --on-ab: #FFFFFF; --chip: rgba(115,75,52,.08);
+  --hero-ink: #4A2F20; --hero-track: rgba(59,38,26,.2);
+  --glow: 0;
+  --pill: var(--cta-2); --pill-ink: var(--cta-ink); --hero-glass: var(--field); --hero-line: var(--field-line);
+  --shadow: inset 0 1px 0 var(--rim), 0 24px 60px -36px rgba(59,38,26,.45);
   --s1: #A67458; --s2: #5F7775; --s3: #8A5A32; --s4: #6F7A45; --s5: #A8822F; --s6: #6B5B73; --s7: #4A6A86; --s8: #9C4F3A;
   --font-display: "Jost", "Futura", "Century Gothic", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -30,25 +34,39 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #17120F; --bg-2: #211914; --glass: rgba(210,217,216,.05); --glass-line: rgba(210,217,216,.10);
-    --screen: rgba(0,0,0,.22); --solid: #241B16; --grid: rgba(210,217,216,.07); --line: rgba(210,217,216,.15); --track: rgba(210,217,216,.16);
-    --ink: #EDE7DF; --muted: #B3A291; --a: #CF9874; --a-dim: rgba(207,152,116,.2); --b: #B7C9C6; --b-dim: rgba(183,201,198,.18);
-    --v: #EFE8DF; --v-dim: rgba(239,232,223,.12); --accent: #D9C3A9; --pill: #D2D9D8; --pill-ink: #1E1612; --on-ab: #1E1612; --chip: rgba(210,217,216,.08);
-    --hero-sky-1: #2C3335; --hero-sky-2: #4A403A; --hero-ink: #D2D9D8; --dune-1: #5B3D2C; --dune-2: #45301F; --dune-3: #2E2018;
-    --hero-glass: rgba(210,217,216,.08); --hero-line: rgba(210,217,216,.2); --hero-track: rgba(210,217,216,.22);
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 18px 40px -24px rgba(0,0,0,.8);
+    --bg: #15110E;
+    --blob1: rgba(74,92,96,.85); --blob2: rgba(140,94,66,.6); --blob3: rgba(166,116,88,.42); --blob4: rgba(90,70,58,.6);
+    --glass: rgba(255,255,255,.055); --glass-line: rgba(255,255,255,.13); --rim: rgba(255,255,255,.1);
+    --screen: rgba(0,0,0,.18); --solid: #2A221D;
+    --field: rgba(255,255,255,.06); --field-line: rgba(255,255,255,.16);
+    --sel-bg: rgba(255,255,255,.9); --sel-ink: #1C1714; --sel-shadow: 0 2px 14px rgba(0,0,0,.4);
+    --cta-1: #F3EDE6; --cta-2: #D9CFC4; --cta-ink: #1C1714; --cta-glow: rgba(227,201,168,.45);
+    --grid: rgba(255,255,255,.07); --line: rgba(255,255,255,.16); --track: rgba(255,255,255,.18);
+    --ink: #F1ECE6; --muted: #B9ABA0;
+    --a: #E0A47E; --a-dim: rgba(224,164,126,.2); --b: #B7C9C6; --b-dim: rgba(183,201,198,.18);
+    --v: #F1ECE6; --v-dim: rgba(241,236,230,.12); --accent: #E3C9A8; --on-ab: #1C1714; --chip: rgba(255,255,255,.08);
+    --hero-ink: #E9E2DA; --hero-track: rgba(255,255,255,.22);
+    --glow: 1;
+    --shadow: inset 0 1px 0 var(--rim), 0 30px 60px -40px rgba(0,0,0,.9);
     --s1: #D69B78; --s2: #B7C9C6; --s3: #D9B48A; --s4: #B9C48B; --s5: #E2BE6E; --s6: #C1B0C9; --s7: #9DBAD3; --s8: #E08D74;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #17120F; --bg-2: #211914; --glass: rgba(210,217,216,.05); --glass-line: rgba(210,217,216,.10);
-  --screen: rgba(0,0,0,.22); --solid: #241B16; --grid: rgba(210,217,216,.07); --line: rgba(210,217,216,.15); --track: rgba(210,217,216,.16);
-  --ink: #EDE7DF; --muted: #B3A291; --a: #CF9874; --a-dim: rgba(207,152,116,.2); --b: #B7C9C6; --b-dim: rgba(183,201,198,.18);
-  --v: #EFE8DF; --v-dim: rgba(239,232,223,.12); --accent: #D9C3A9; --pill: #D2D9D8; --pill-ink: #1E1612; --on-ab: #1E1612; --chip: rgba(210,217,216,.08);
-  --hero-sky-1: #2C3335; --hero-sky-2: #4A403A; --hero-ink: #D2D9D8; --dune-1: #5B3D2C; --dune-2: #45301F; --dune-3: #2E2018;
-  --hero-glass: rgba(210,217,216,.08); --hero-line: rgba(210,217,216,.2); --hero-track: rgba(210,217,216,.22);
-  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 18px 40px -24px rgba(0,0,0,.8);
+  --bg: #15110E;
+  --blob1: rgba(74,92,96,.85); --blob2: rgba(140,94,66,.6); --blob3: rgba(166,116,88,.42); --blob4: rgba(90,70,58,.6);
+  --glass: rgba(255,255,255,.055); --glass-line: rgba(255,255,255,.13); --rim: rgba(255,255,255,.1);
+  --screen: rgba(0,0,0,.18); --solid: #2A221D;
+  --field: rgba(255,255,255,.06); --field-line: rgba(255,255,255,.16);
+  --sel-bg: rgba(255,255,255,.9); --sel-ink: #1C1714; --sel-shadow: 0 2px 14px rgba(0,0,0,.4);
+  --cta-1: #F3EDE6; --cta-2: #D9CFC4; --cta-ink: #1C1714; --cta-glow: rgba(227,201,168,.45);
+  --grid: rgba(255,255,255,.07); --line: rgba(255,255,255,.16); --track: rgba(255,255,255,.18);
+  --ink: #F1ECE6; --muted: #B9ABA0;
+  --a: #E0A47E; --a-dim: rgba(224,164,126,.2); --b: #B7C9C6; --b-dim: rgba(183,201,198,.18);
+  --v: #F1ECE6; --v-dim: rgba(241,236,230,.12); --accent: #E3C9A8; --on-ab: #1C1714; --chip: rgba(255,255,255,.08);
+  --hero-ink: #E9E2DA; --hero-track: rgba(255,255,255,.22);
+  --glow: 1;
+  --shadow: inset 0 1px 0 var(--rim), 0 30px 60px -40px rgba(0,0,0,.9);
   --s1: #D69B78; --s2: #B7C9C6; --s3: #D9B48A; --s4: #B9C48B; --s5: #E2BE6E; --s6: #C1B0C9; --s7: #9DBAD3; --s8: #E08D74;
   color-scheme: dark;
 }
@@ -57,7 +75,7 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; }
 body {
-  background: var(--bg) linear-gradient(180deg, var(--bg-2), var(--bg) 420px) no-repeat;
+  background: var(--bg);
   color: var(--ink); font: 400 15px/1.5 var(--font-body);
   padding-inline: 16px; padding-block: 14px 40px; -webkit-font-smoothing: antialiased;
 }
@@ -68,8 +86,6 @@ a { color: inherit; }
 
 /* ---------- header ---------- */
 .top { position: relative; overflow: hidden; border-radius: 22px; background: linear-gradient(180deg, var(--hero-sky-1), var(--hero-sky-2) 80%); padding: 16px 20px 64px; box-shadow: var(--shadow); }
-.dunes { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 62%; display: block; }
-.dunes .d1 { fill: var(--dune-1); } .dunes .d2 { fill: var(--dune-2); } .dunes .d3 { fill: var(--dune-3); }
 .bar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--hero-ink); font: 400 15px/1 var(--font-display); letter-spacing: .3em; text-transform: uppercase; margin-right: 6px; }
 .brand svg { width: 38px; height: 18px; } .brand circle { fill: none; stroke: currentColor; stroke-width: 1.3; }
@@ -205,18 +221,29 @@ dialog::backdrop { background: rgba(23,18,15,.45); }
 .dlg .step { border: 1px solid var(--glass-line); border-radius: 14px; padding: 12px 14px; background: var(--screen); }
 .dlg p { margin: 0; font-size: 13px; color: var(--muted); }
 footer { text-align: center; font-size: 12.5px; color: var(--muted); padding-top: 6px; }
-@media (max-width: 560px) { .top { padding: 12px 14px 56px; } .tabs button { padding: 10px 13px; letter-spacing: .14em; } .big { font-size: 26px; } }
+
+/* ---------- glass ---------- */
+body::before { content: ""; position: fixed; inset: -10%; z-index: -1; pointer-events: none; filter: blur(60px);
+  background: radial-gradient(38% 34% at 12% 8%, var(--blob1), transparent 70%), radial-gradient(34% 38% at 88% 12%, var(--blob2), transparent 70%),
+              radial-gradient(44% 42% at 72% 88%, var(--blob3), transparent 70%), radial-gradient(40% 40% at 8% 92%, var(--blob4), transparent 70%); }
+.top { background: var(--glass); border: 1px solid var(--glass-line); padding: 12px 16px; backdrop-filter: blur(28px) saturate(1.4); -webkit-backdrop-filter: blur(28px) saturate(1.4); }
+.brand { font-weight: 300; }
+.card { background: var(--glass); border: 1px solid var(--glass-line); border-radius: 22px; backdrop-filter: blur(28px) saturate(1.35); -webkit-backdrop-filter: blur(28px) saturate(1.35); }
+canvas { background: var(--screen); border-color: var(--glass-line); }
+.tabs, .seg { background: var(--field); border-color: var(--field-line); }
+.tabs button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-ink); box-shadow: var(--sel-shadow); }
+.play, .btn.dark, .pillbtn { background: linear-gradient(180deg, var(--cta-1), var(--cta-2)); color: var(--cta-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 8px 22px -10px var(--cta-glow); }
+.btn, .ghost, .sound, .rec, input[type=text], input[type=number], select { background: var(--field); border-color: var(--field-line); color: var(--ink); }
+.ghost { color: var(--hero-ink); }
+.band { background: var(--screen); border-color: var(--glass-line); }
+dialog { background: var(--solid); }
+@media (max-width: 560px) { .top { padding: 10px 12px; } .tabs button { padding: 10px 13px; letter-spacing: .14em; } .big { font-size: 26px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <div class="app">
   <header class="top">
-    <svg class="dunes" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
-      <path class="d1" d="M0,150 C200,92 360,110 560,148 C760,186 900,84 1110,96 C1270,105 1370,140 1440,132 L1440,300 L0,300 Z"/>
-      <path class="d2" d="M0,214 C170,186 330,160 530,198 C720,234 860,176 1030,170 C1210,164 1330,206 1440,198 L1440,300 L0,300 Z"/>
-      <path class="d3" d="M0,268 C240,244 430,258 650,250 C890,240 1090,276 1440,258 L1440,300 L0,300 Z"/>
-    </svg>
     <div class="bar">
       <div class="brand"><svg viewBox="0 0 38 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5"/><circle cx="19" cy="9" r="7.5"/><circle cx="29" cy="9" r="7.5"/></svg>Partials Lab</div>
       <div class="tabs" role="tablist" aria-label="Sections">
@@ -409,6 +436,9 @@ footer { text-align: center; font-size: 12.5px; color: var(--muted); padding-top
   const onSeg = (id, fn) => $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) fn(b.dataset.v); });
   const rmsOf = x => { let s = 0; for (let i = 0; i < x.length; i++) s += x[i] * x[i]; return Math.sqrt(s / (x.length || 1)); };
   const db2a = d => Math.pow(10, d / 20), a2db = a => 20 * Math.log10(a + 1e-12);
+  // '#rrggbb' + alpha → rgba(); used for soft gradients on the canvases
+  const alpha = (hex, a) => { const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim()); if (!m) return hex; const n = parseInt(m[1], 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+  const glowOn = () => +css('--glow') > 0;
 
   const SR = 48000, NYQ = SR / 2, NH = 40, F_LO = 55, F_HI = 1760, BAR_DB = 50;
   let dirty = true, barsDirty = true, padDirty = true;
@@ -785,9 +815,13 @@ footer { text-align: center; font-size: 12.5px; color: var(--muted); padding-top
     g.font = `500 10px ${css('--font-body')}`; g.textAlign = 'center'; g.textBaseline = 'top';
     for (let i = 0; i < NH; i++) {
       const x = pad.l + i * bw, a = S.harm[i], hh = aToH(a) * ph, inaud = S.f0 * Math.pow(i + 1, 1 + S.stretch) >= 20000;
-      g.fillStyle = css('--grid'); g.fillRect(x + 1, pad.t, Math.max(1, bw - 2), ph);
-      g.fillStyle = inaud ? css('--muted') : css('--a'); g.globalAlpha = inaud ? 0.35 : 1;
-      g.fillRect(x + 1, pad.t + ph - hh, Math.max(1, bw - 2), hh); g.globalAlpha = 1;
+      const bx = x + 1, bww = Math.max(1, bw - 2), r = Math.min(3, bww / 2);
+      g.fillStyle = css('--grid'); g.beginPath(); g.roundRect ? g.roundRect(bx, pad.t, bww, ph, r) : g.rect(bx, pad.t, bww, ph); g.fill();
+      if (hh > 0) {
+        const col = inaud ? css('--muted') : css('--a'), gr = g.createLinearGradient(0, pad.t + ph - hh, 0, pad.t + ph);
+        gr.addColorStop(0, alpha(col, inaud ? 0.4 : 1)); gr.addColorStop(1, alpha(col, inaud ? 0.12 : 0.35));
+        g.fillStyle = gr; g.beginPath(); g.roundRect ? g.roundRect(bx, pad.t + ph - hh, bww, hh, r) : g.rect(bx, pad.t + ph - hh, bww, hh); g.fill();
+      }
       if (ticks) { const r = rec.H.find(q => q.n === i + 1); if (r && r.db > -BAR_DB) { const y = pad.t + ph - aToH(db2a(r.db)) * ph; g.fillStyle = css('--v'); g.fillRect(x, y - 1.5, bw, 3); } }
       if (i === barSel && document.activeElement === $('bars')) { g.strokeStyle = css('--accent'); g.lineWidth = 2; g.strokeRect(x + 1, pad.t, bw - 2, ph); }
       if (i === 0 || (i + 1) % 5 === 0) { g.fillStyle = css('--muted'); g.fillText(i + 1, x + bw / 2, pad.t + ph + 5); }
@@ -1409,7 +1443,8 @@ footer { text-align: center; font-size: 12.5px; color: var(--muted); padding-top
         let pk = 1e-9;
         if (pts.length) {
           pts.forEach(p => { pk = Math.max(pk, Math.abs(p[1])); }); const sc = (ph / 2) * 0.9 / pk;
-          g.strokeStyle = css('--a'); g.lineWidth = 2; g.lineJoin = 'round'; g.beginPath(); pts.forEach(([x, v], i) => i ? g.lineTo(x, mid - v * sc) : g.moveTo(x, mid - v * sc)); g.stroke();
+          g.strokeStyle = css('--a'); g.lineWidth = 2; g.lineJoin = 'round'; g.shadowColor = alpha(css('--a'), glowOn() ? 0.7 : 0.35); g.shadowBlur = glowOn() ? 10 : 6;
+          g.beginPath(); pts.forEach(([x, v], i) => i ? g.lineTo(x, mid - v * sc) : g.moveTo(x, mid - v * sc)); g.stroke(); g.shadowBlur = 0;
         } else {
           const cols = Math.ceil(pw), K = 24, dt = winSec / cols, mx = new Float32Array(cols), mn = new Float32Array(cols);
           for (let c = 0; c < cols; c++) { let lo = Infinity, hi = -Infinity; for (let q = 0; q < K; q++) { const v = sig.val((c + (q + hash(c, q)) / K) * dt); if (v < lo) lo = v; if (v > hi) hi = v; } mn[c] = lo; mx[c] = hi; pk = Math.max(pk, -lo, hi); }
@@ -1464,11 +1499,14 @@ footer { text-align: center; font-size: 12.5px; color: var(--muted); padding-top
     const stems = [];
     if (showSynth && MIX.h > 0) {
       const E = eff(partialsOf(s)), top = Math.max(...E.map(p => p.a), 1e-12);
-      g.strokeStyle = g.fillStyle = css('--a'); g.lineWidth = 2;
+      const ca = css('--a');
       E.forEach(p => {
         if (p.f < SF_LO || p.f > SF_HI) return;
         const d = a2db(MIX.h * p.a / top), x = fx(p.f), y = dy(d); if (d < DB_LO) return;
-        stems.push({ x, p, d }); g.beginPath(); g.moveTo(x, pad.t + ph); g.lineTo(x, y); g.stroke(); g.beginPath(); g.arc(x, y, 3.2, 0, 2 * Math.PI); g.fill();
+        stems.push({ x, p, d });
+        const gr = g.createLinearGradient(0, y, 0, pad.t + ph); gr.addColorStop(0, alpha(ca, 0.95)); gr.addColorStop(1, alpha(ca, 0.1));
+        g.strokeStyle = gr; g.lineWidth = 1.75; g.beginPath(); g.moveTo(x, pad.t + ph); g.lineTo(x, y); g.stroke();
+        g.fillStyle = ca; g.shadowColor = alpha(ca, 0.8); g.shadowBlur = glowOn() ? 10 : 5; g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
       });
       if (E.length) legend.unshift(['--a', tab === 'morph' ? 'Blend' : tab === 'voice' ? 'Rebuilt' : 'Harmonics', 'dot']);
     }
@@ -1504,7 +1542,7 @@ footer { text-align: center; font-size: 12.5px; color: var(--muted); padding-top
     D.forEach((s, i) => {
       const wi = weights ? weights[i] || 0 : 0;
       g.fillStyle = col(s); g.globalAlpha = 0.18; g.beginPath(); g.arc(X(s), Y(s), DOT + 6 + 14 * wi, 0, 2 * Math.PI); g.fill();
-      g.globalAlpha = 1; g.beginPath(); g.arc(X(s), Y(s), DOT, 0, 2 * Math.PI); g.fill();
+      g.globalAlpha = 1; g.shadowColor = alpha(col(s), 0.7); g.shadowBlur = 12; g.beginPath(); g.arc(X(s), Y(s), DOT, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
       g.fillStyle = css('--ink'); g.font = font(12, 600); g.textAlign = s.x > 0.75 ? 'right' : s.x < 0.25 ? 'left' : 'center'; g.textBaseline = s.y > 0.8 ? 'bottom' : 'top';
       g.fillText(s.name, X(s) + (s.x > 0.75 ? DOT : s.x < 0.25 ? -DOT : 0), Y(s) + (s.y > 0.8 ? -DOT - 6 : DOT + 6));
     });
