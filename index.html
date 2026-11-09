@@ -139,6 +139,7 @@ select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
 /* ---------- shelf ---------- */
 .shelf { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 4px 6px; }
 #shelfMsg:empty { display: none; }
+.linkbtn { border: 0; background: none; padding: 0; font: 600 12.5px var(--font-body); color: var(--ink); text-decoration: underline; cursor: pointer; }
 .shelf .chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }
 .sound { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; background: var(--glass); overflow: hidden; }
 .sound.on { border-color: var(--ink); }
@@ -409,7 +410,8 @@ dialog { background: var(--solid); }
         <li>Record yourself saying the sound in Voice, so its curve shows on the spectrum.</li>
         <li>In Build, set Harmonics <b>Level</b> to 0 and raise <b>Noise</b>.</li>
         <li>Turn the Filter on and move bands until the noise matches your curve.</li>
-        <li>For <b>jjj</b> (a buzzing shh), bring the harmonics back in under the noise.</li></ol></div>
+        <li>For <b>jjj</b> (a buzzing shh), bring the harmonics back in under the noise.</li>
+        <li>Back in Voice, <b>Switch</b> compares your recording with what you built.</li></ol></div>
       <div class="step"><h3><small>Morph</small>The vowel square</h3><ol>
         <li>Save a few vowels to My sounds; each becomes a dot.</li><li>Press and drag in the square: pitch and harmonics are blended by distance.</li>
         <li><b>By number</b> blends harmonic 1 with 1, 2 with 2…; <b>By shape</b> blends the vowel shapes.</li>
@@ -1000,7 +1002,7 @@ dialog { background: var(--solid); }
     recChunks.forEach(c => { data.set(c, o); o += c.length; }); recChunks = [];
     useRecording(analyse(trimQuiet(data, micSR), micSR));
     micUI();
-    vStatus(rec.f0 ? `Rebuilt at ${fmtF(rec.f0)} (${noteName(rec.f0)}) from ${rec.H.filter(h => h.db > -BAR_DB).length} harmonics. Press Play, then pick Original, Rebuilt or Switch.` : 'Recorded, but no steady pitch was found. That is normal for shh, fff or sss: use it as a guide for noise and the filter in Build.');
+    vStatus(rec.f0 ? `Rebuilt at ${fmtF(rec.f0)} (${noteName(rec.f0)}) from ${rec.H.filter(h => h.db > -BAR_DB).length} harmonics. Press Play, then pick Original, Rebuilt or Switch.` : 'Recorded. No steady pitch, which is normal for shh, fff and sss. Go to Build: your recording shows on the spectrum as a guide. Set Harmonics Level to 0, raise Noise, and shape it with the Filter. Then come back and use Switch to compare.');
   }
   // cut the quiet start and end, fading the edges so a loop does not click
   function trimQuiet(data, sr) {
@@ -1013,7 +1015,7 @@ dialog { background: var(--solid); }
   }
   // make a recording the current one and rebuild it into the Build sound
   function useRecording(r) {
-    rec = r; activeId = null; renderShelf(); MIX.n = 0; MIX.h = 0.8; FILT.on = false; $('shift').value = 0; fillR($('shift')); $('shiftOut').textContent = '0 st';
+    rec = r; activeId = null; renderShelf(); if (r.f0) { MIX.n = 0; MIX.h = 0.8; FILT.on = false; } $('shift').value = 0; fillR($('shift')); $('shiftOut').textContent = '0 st';
     if (rec.f0) rebuild(); else update();
     showRecUI();
   }
@@ -1078,7 +1080,9 @@ dialog { background: var(--solid); }
   function renderShelf() {
     $('shelf').innerHTML = shelf.map(s => `<span class="sound${s.id === activeId ? ' on' : ''}" data-id="${s.id}">
       <button type="button" class="pick" title="${s.mode === 'harm' ? fmtF(s.f0) : 'any frequencies'}${s.example ? ' · example' : ''}"><span class="dot" style="background:var(--s${s.slot % 8 + 1})"></span>${esc(s.name)}</button>
-      <button type="button" class="x" aria-label="Delete ${esc(s.name)}">×</button></span>`).join('') || '<span class="hint">Nothing saved yet. Name a sound and press + Save sound.</span>';
+      <button type="button" class="x" aria-label="Delete ${esc(s.name)}">×</button></span>`).join('')
+      + (hiddenEx.length ? '<button type="button" class="btn" id="restoreEx">Restore examples</button>' : '')
+      || '<span class="hint">Nothing saved yet. Name a sound and press + Save sound.</span>';
   }
   function loadItem(s) {
     S.f0 = s.f0; S.harm = Float32Array.from(s.harm); S.stretch = s.stretch || 0; S.mode = s.mode; S.list = s.list.map(p => ({ ...p })); S.fromRec = !!s.rec;
@@ -1086,16 +1090,33 @@ dialog { background: var(--solid); }
     if (s.rec) { rec = s.rec; $('shift').value = 0; fillR($('shift')); $('shiftOut').textContent = '0 st'; }
     activeId = s.id; renderShelf(); syncBuild(); filterChanged(true); showRecUI(); micUI();
   }
+  let lastDeleted = null;
   $('shelf').addEventListener('click', e => {
+    if (e.target.closest('#restoreEx')) { restoreExamples(); return; }
     const chip = e.target.closest('.sound'); if (!chip) return;
     const s = shelf.find(x => x.id === +chip.dataset.id);
     if (e.target.closest('.x')) {
+      lastDeleted = { item: s, index: shelf.indexOf(s) };
       shelf = shelf.filter(x => x !== s); if (s.example) hiddenEx.push(s.name);
-      if (activeId === s.id) activeId = null; persist(); renderShelf(); refreshMorph(); return;
+      if (activeId === s.id) activeId = null; persist(); renderShelf(); refreshMorph();
+      $('shelfMsg').innerHTML = `Deleted “${esc(s.name)}”. <button type="button" class="linkbtn" id="undoDel">Undo</button>`;
+      return;
     }
     if (tab === 'morph') { if (s.mode === 'harm') { pt = { x: s.x, y: s.y }; refreshMorph(); } return; }
     loadItem(s);
   });
+  $('shelfMsg').addEventListener('click', e => {
+    if (!e.target.closest('#undoDel') || !lastDeleted) return;
+    const { item, index } = lastDeleted; lastDeleted = null;
+    if (shelf.some(x => x.slot === item.slot)) { const used = new Set(shelf.map(x => x.slot)); let k = 0; while (used.has(k)) k++; item.slot = k; }
+    shelf.splice(Math.min(index, shelf.length), 0, item); hiddenEx = hiddenEx.filter(n => n !== item.name || !item.example);
+    persist(); renderShelf(); refreshMorph(); $('shelfMsg').textContent = `Restored “${item.name}”.`;
+  });
+  function restoreExamples() {
+    const missing = hiddenEx.slice(); hiddenEx = [];
+    EXAMPLES.forEach((ex, i) => { if (missing.includes(ex[0]) && !shelf.some(x => x.example && x.name === ex[0])) shelf.splice(Math.min(i, shelf.length), 0, makeExample(i)); });
+    persist(); renderShelf(); refreshMorph(); $('shelfMsg').textContent = 'The example sounds are back.';
+  }
   $('saveForm').addEventListener('submit', e => {
     e.preventDefault();
     const name = $('saveName').value.trim() || `Sound ${shelf.filter(s => !s.example).length + 1}`;
@@ -1125,16 +1146,20 @@ dialog { background: var(--solid); }
     ['oo', 330, [[370, 1, 70], [950, 0.4, 100], [2670, 0.08, 160]]],
     ['eh', 330, [[610, 1, 80], [2330, 0.4, 120], [2990, 0.25, 170]]],
   ];
+  const BASE = { mix: { h: 0.8, n: 0, color: 'white' }, filt: { on: false, bands: [] }, stretch: 0, mode: 'harm', list: [] };
+  // example i keeps its own corner of the square when that spot is free
+  function makeExample(i) {
+    const [name, f0, fm] = EXAMPLES[i], r = analyse(makeVowel(f0, fm), SR), used = new Set(shelf.map(x => x.slot));
+    let slot = i; while (used.has(slot)) slot++;
+    const sp = SPOTS[slot % SPOTS.length];
+    return { ...BASE, id: nextId++, name, slot, x: sp[0], y: sp[1], f0: r.f0, harm: Array.from(harmFromRec(r, r.f0, false)), rec: r, example: true };
+  }
   function loadShelf() {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e) { saved = null; }
     hiddenEx = saved && saved.hiddenEx || [];
-    const base = { mix: { h: 0.8, n: 0, color: 'white' }, filt: { on: false, bands: [] }, stretch: 0, mode: 'harm', list: [] };
-    EXAMPLES.forEach(([name, f0, fm]) => {
-      if (hiddenEx.includes(name)) return;
-      const r = analyse(makeVowel(f0, fm), SR), sp = SPOTS[shelf.length];
-      shelf.push({ ...base, id: nextId++, name, slot: shelf.length, x: sp[0], y: sp[1], f0: r.f0, harm: Array.from(harmFromRec(r, r.f0, false)), rec: r, example: true });
-    });
+    const base = BASE;
+    EXAMPLES.forEach((ex, i) => { if (!hiddenEx.includes(ex[0])) shelf.push(makeExample(i)); });
     (saved && saved.shelf || []).forEach(s => {
       const used = new Set(shelf.map(x => x.slot)); let slot = s.slot ?? 0; while (used.has(slot)) slot++;
       shelf.push({ ...base, ...s, id: nextId++, slot });
