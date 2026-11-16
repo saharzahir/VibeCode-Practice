@@ -142,13 +142,12 @@ select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
 /* the simple sound map */
 .layout.wide { grid-template-columns: minmax(0, 600px) minmax(0, 1fr); }
 @media (max-width: 920px) { .layout.wide { grid-template-columns: minmax(0, 1fr); } }
-.toolbar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-@media (max-width: 460px) { .toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.toolbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .tool { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px 10px; border-radius: 16px; border: 1px solid var(--field-line); background: var(--field); color: var(--ink); font: 500 12.5px/1 var(--font-body); cursor: pointer; transition: background .15s, box-shadow .15s; }
 .tool svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .tool:hover { border-color: var(--line); }
 .mapcard.rebuild .tool.edit, .mapcard.rebuild .current { display: none; }
-.mapcard.rebuild .toolbar { grid-template-columns: repeat(2, minmax(0, 150px)); justify-content: center; }
+.mapcard.rebuild .toolbar { grid-template-columns: minmax(0, 160px); justify-content: center; }
 .tool[aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-ink); box-shadow: var(--sel-shadow); border-color: transparent; }
 .tool.on { background: linear-gradient(180deg, var(--cta-1), var(--cta-2)); color: var(--cta-ink); border-color: transparent; }
 .tool:disabled { opacity: .38; cursor: default; }
@@ -355,15 +354,11 @@ dialog { background: var(--solid); }
       <div class="tabpanel" id="tab-morph" role="tabpanel" aria-labelledby="t-morph" hidden>
         <section class="card mapcard">
           <div class="toolbar" id="mTool" role="toolbar" aria-label="Tools">
-            <button class="tool" data-mode="listen" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.8"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.8"/></svg><span>Listen</span></button>
-            <button class="tool edit" id="mRec"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span id="mRecLabel">Record</span></button>
-            <button class="tool edit" data-mode="draw" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.2L15.8 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"/><path d="M14 6.8l3.2 3.2"/></svg><span>Draw</span></button>
-            <button class="tool edit" data-mode="path" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2"/><path d="M7 17c4-1 2-7 6-8s3 2 5-3" stroke-dasharray="2.2 2.6"/><path d="M15.5 5.5L18 6l.5-2.6"/></svg><span>Path</span></button>
-            <button class="tool" id="pathPlay" disabled><svg viewBox="0 0 24 24" aria-hidden="true" id="pathIcon"><path d="M8 5.5v13l11-6.5z"/></svg><span id="pathLabel">Play</span></button>
+            <button class="tool edit" data-mode="draw" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.2L15.8 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"/><path d="M14 6.8l3.2 3.2"/></svg><span>Draw</span></button>
+            <button class="tool" data-mode="listen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.8"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.8"/></svg><span>Listen</span></button>
             <button class="tool edit" data-mode="erase" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.6 4.4l5 5L11 18H6.5L3.8 15.3a1.6 1.6 0 0 1 0-2.3z"/><path d="M9 10l5 5"/><path d="M12.5 21H20"/></svg><span>Erase</span></button>
           </div>
-          <div class="current" id="mCurrent"></div>
-          <canvas id="square" aria-label="The sound plane. Dots and lines are your sounds; touch anywhere to hear them mix."></canvas>
+          <canvas id="square" aria-label="The plane. Press and hold to record while you draw; touch to listen."></canvas>
           <p class="maptip" id="sqMsg" role="status"></p>
           <div class="hint maphint" id="sqOut"></div>
         </section>
@@ -436,7 +431,13 @@ dialog { background: var(--solid); }
         <li>Turn the Filter on and move bands until the noise matches your curve.</li>
         <li>For <b>jjj</b> (a buzzing shh), bring the harmonics back in under the noise.</li>
         <li>Back in Voice, <b>Switch</b> compares your recording with what you built.</li></ol></div>
-      <div class="step"><h3><small>Morph</small>The sound plane</h3><ol>
+      <div class="step"><h3><small>Morph</small>Draw with your voice</h3><ol>
+        <li><b>Draw</b>: press and hold on the plane and speak. Lift to stop. A tap is a dot; a drag is a line.</li>
+        <li>On a line, your recording runs from where you started to where you stopped.</li>
+        <li><b>Listen</b>: touch or drag anywhere. Near a drawing you hear it; in between, your recordings mix.</li>
+        <li><b>Erase</b>: rub over a drawing to remove it.</li>
+        <li>The <b>Rebuild</b> tab plays the same drawings remade from pitch and harmonics.</li></ol></div>
+      <div class="step" hidden><h3><small>Morph</small>The sound plane</h3><ol>
         <li><b>Record</b>: make a sound, press Stop, then tap the plane to put it there.</li>
         <li><b>Draw</b>: draw a line for your sound. Anywhere on the line plays it.</li>
         <li><b>Listen</b>: touch and drag anywhere to hear your sounds mix. The closer a sound, the louder it is in the mix.</li>
@@ -761,6 +762,13 @@ dialog { background: var(--solid); }
   // one looping player per recording on the map, pitch-shifted to the blended pitch and mixed by distance
   const voices = new Map();
   const recRms = r => r.rms || (r.rms = rmsOf(r.data) || 1e-3);
+  // which part of a recording plays: a dot loops all of it; a line loops a short stretch around the spot you are nearest to
+  function loopWin(d) {
+    const r = d.rec, t = nearT[placed().indexOf(d)];
+    if (t == null) { const a = Math.min(0.03, r.dur / 4); return [a, Math.max(r.dur - 0.03, a + 0.05)]; }
+    const W = Math.min(r.dur, d.f0 ? Math.max(1, Math.round(0.12 * d.f0)) / d.f0 : 0.12), a = clamp(t - W / 2, 0, Math.max(0, r.dur - W));
+    return [a, a + W];
+  }
   function syncVoices(on) {
     const t = ac.currentTime, D = on ? placed().filter(d => d.rec && d.rec.data) : [];
     voices.forEach((v, uid) => { if (!D.some(d => d.uid === uid)) { v.g.gain.setTargetAtTime(0, t, 0.04); v.src.stop(t + 0.3); voices.delete(uid); } });
@@ -772,11 +780,13 @@ dialog { background: var(--solid); }
         const r = d.rec;
         if (!r.buf) { r.buf = ac.createBuffer(1, r.data.length, r.sr); r.buf.copyToChannel(r.data, 0); }
         const src = ac.createBufferSource(), g = ac.createGain();
-        src.buffer = r.buf; src.loop = true; src.loopStart = Math.min(0.03, r.dur / 4); src.loopEnd = Math.max(r.dur - 0.03, src.loopStart + 0.05);
-        g.gain.value = 0; src.connect(g).connect(out); src.start(t + 0.02, src.loopStart);
+        const [ls, le] = loopWin(d);
+        src.buffer = r.buf; src.loop = true; src.loopStart = ls; src.loopEnd = le;
+        g.gain.value = 0; src.connect(g).connect(out); src.start(t + 0.02, ls);
         v = { src, g }; voices.set(d.uid, v);
       }
-      const w = weights[all.indexOf(d)] || 0;
+      const w = weights[all.indexOf(d)] || 0, [ls, le] = loopWin(d);
+      if (ls >= v.src.loopEnd) { v.src.loopEnd = le; v.src.loopStart = ls; } else { v.src.loopStart = ls; v.src.loopEnd = le; }
       v.src.playbackRate.setTargetAtTime(rateOf(d), t, 0.03);
       v.g.gain.setTargetAtTime(w * 0.2 / recRms(d.rec), t, 0.03);
     });
@@ -827,9 +837,10 @@ dialog { background: var(--solid); }
       const w = weights[i] || 0; if (w < 0.005 || !d.rec || !d.rec.data) return;
       const r = d.rec, buf = oc.createBuffer(1, r.data.length, r.sr); buf.copyToChannel(r.data, 0);
       const src = oc.createBufferSource(), g = oc.createGain();
-      src.buffer = buf; src.loop = true; src.loopStart = Math.min(0.03, r.dur / 4); src.loopEnd = Math.max(r.dur - 0.03, src.loopStart + 0.05);
+      const [ls, le] = loopWin(d);
+      src.buffer = buf; src.loop = true; src.loopStart = ls; src.loopEnd = le;
       src.playbackRate.value = rateOf(d); g.gain.value = w * 0.2 / recRms(r);
-      src.connect(g).connect(oc.destination); src.start(0, src.loopStart);
+      src.connect(g).connect(oc.destination); src.start(0, ls);
     });
     const d = (await oc.startRendering()).getChannelData(0);
     let pk = 0; for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i]));
@@ -849,7 +860,7 @@ dialog { background: var(--solid); }
   const LEADS = {
     build: 'Build a sound by hand: set the <b>pitch</b>, draw the <b>harmonics</b>, add <b>noise</b> and a <b>filter</b>, or play it with <b>gestures</b>. Press <b>Play</b> to hear it.',
     voice: 'Record yourself. Your sound is rebuilt from its <b>pitch</b> and <b>harmonics</b>, so you can compare the original with the rebuilt one.',
-    morph: 'Your <b>real voice</b> only. Record sounds, put them on the plane, and <b>touch anywhere</b> to hear your recordings mix.',
+    morph: '<b>Draw</b> and speak at the same time: your voice is recorded where you draw. Then <b>Listen</b> and touch anywhere to hear your recordings mix.',
     rebuild: 'The same map, <b>regenerated artificially</b>: each recording is remade from its pitch and harmonics with sine waves.',
   };
   function setTab(t) {
@@ -867,7 +878,7 @@ dialog { background: var(--solid); }
     document.querySelector('.layout').classList.toggle('wide', map);
     if (map && gSrc !== 'off') pickSrc('off');
     gMapText();
-    if (map) { refreshMorph(); renderCurrent(); tip(); }
+    if (map) { refreshMorph(); tip(); }
     if (t !== 'voice') clearInterval(altTimer);
     else if (listen === 'switch') startAlt();
     showRecUI(); update();
@@ -1080,10 +1091,10 @@ dialog { background: var(--solid); }
   function stopRec() {
     recording = false;
     const target = recTarget; recTarget = 'voice';
-    if (recLen < micSR * 0.3) { recChunks = []; micUI(); (target === 'map' ? mapMsg : vStatus)('That was too short. Record at least half a second.'); return; }
+    if (recLen < micSR * (target === 'map' ? 0.15 : 0.3)) { recChunks = []; micUI(); if (target === 'map') { stroke = null; dirty = true; mapMsg('Hold down a little longer while you speak.'); } else vStatus('That was too short. Record at least half a second.'); return; }
     const data = new Float32Array(recLen); let o = 0;
     recChunks.forEach(c => { data.set(c, o); o += c.length; }); recChunks = [];
-    if (target === 'map') { micUI(); addRecordingToMap(analyse(trimQuiet(data, micSR), micSR)); return; }
+    if (target === 'map') { micUI(); finishStroke(data); return; }
     useRecording(analyse(trimQuiet(data, micSR), micSR));
     micUI();
     vStatus(rec.f0 ? `Rebuilt at ${fmtF(rec.f0)} (${noteName(rec.f0)}) from ${rec.H.filter(h => h.db > -BAR_DB).length} harmonics. Press Play, then pick Original, Rebuilt or Switch.` : 'Recorded. No steady pitch, which is normal for shh, fff and sss. Go to Build: your recording shows on the spectrum as a guide. Set Harmonics Level to 0, raise Noise, and shape it with the Filter. Then come back and use Switch to compare.');
@@ -1121,7 +1132,7 @@ dialog { background: var(--solid); }
   function micUI() {
     $('micBtn').setAttribute('aria-pressed', !!mic); $('micLabel').textContent = mic ? 'On' : 'Turn on';
     $('recBtn').setAttribute('aria-pressed', recording); $('recBtn').textContent = recording ? '■ Stop' : '● Record';
-    const mr = recording && recTarget === 'map'; $('mRec').classList.toggle('on', mr); $('mRecLabel').textContent = mr ? `Stop ${(recLen / micSR).toFixed(1)} s` : 'Record';
+    if (recording && recTarget === 'map') mapMsg(`Recording… ${(recLen / micSR).toFixed(1)} s. Lift to stop.`);
     $('recTime').textContent = recording ? `${(recLen / micSR).toFixed(1)} s of ${REC_MAX} s` : rec ? `${rec.dur.toFixed(1)} s recorded` : 'nothing yet';
     const p = mic ? livePitch : rec ? rec.f0 : 0;
     $('pitchOut').textContent = p ? fmtF(p) : '—'; $('pitchNote').textContent = p ? noteName(p) : mic ? 'no steady pitch' : '';
@@ -1153,7 +1164,7 @@ dialog { background: var(--solid); }
   const snap = () => ({ f0: S.f0, harm: Array.from(S.harm), stretch: S.stretch, mode: S.mode, list: S.list.map(p => ({ ...p })), mix: { ...MIX }, filt: { on: FILT.on, bands: FILT.bands.map(b => ({ ...b })) } });
   const newUid = () => 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   function addToShelf(name, extra, place = true) {
-    if (shelf.length >= 12) return null;
+    if (extra.drawn ? shelf.length >= 80 : shelf.filter(x => !x.drawn).length >= 12) return null;
     const used = new Set(shelf.map(s => s.slot)); let slot = 0; while (used.has(slot)) slot++;
     const sp = SPOTS[slot % SPOTS.length], item = { id: nextId++, uid: newUid(), name, slot, x: sp[0], y: sp[1], ...snap(), ...extra };
     shelf.push(item); activeId = item.id;
@@ -1186,12 +1197,11 @@ dialog { background: var(--solid); }
     try { localStorage.setItem(LS, JSON.stringify({ hiddenEx, shapes, shelf: shelf.filter(s => !s.example).map(({ rec: _r, ...rest }) => rest) })); } catch (e) { /* storage unavailable: sounds last until reload */ }
   }
   function renderShelf() {
-    $('shelf').innerHTML = shelf.map(s => `<span class="sound${s.id === activeId ? ' on' : ''}" data-id="${s.id}">
+    $('shelf').innerHTML = shelf.filter(s => !s.drawn).map(s => `<span class="sound${s.id === activeId ? ' on' : ''}" data-id="${s.id}">
       <button type="button" class="pick" title="${s.mode === 'harm' ? fmtF(s.f0) : 'any frequencies'}${s.example ? ' · example' : ''}"><span class="dot" style="background:var(--s${s.slot % 8 + 1})"></span>${esc(s.name)}</button>
       <button type="button" class="x" aria-label="Delete ${esc(s.name)}">×</button></span>`).join('')
       + (hiddenEx.length ? '<button type="button" class="btn" id="restoreEx">Restore examples</button>' : '')
       || '<span class="hint">Nothing saved yet. Name a sound and press + Save sound.</span>';
-    renderCurrent();
   }
   function loadItem(s) {
     S.f0 = s.f0 || S.f0; S.harm = Float32Array.from(s.harm); S.stretch = s.stretch || 0; S.mode = s.mode; S.list = s.list.map(p => ({ ...p })); S.fromRec = !!s.rec;
@@ -1211,17 +1221,7 @@ dialog { background: var(--solid); }
       $('shelfMsg').innerHTML = `Deleted “${esc(s.name)}”. <button type="button" class="linkbtn" id="undoDel">Undo</button>`;
       return;
     }
-    if (isMap()) {
-      if (s.example) { mapMsg('The examples are made-up sounds, so they are not on the map. Press Record to add your own voice.'); return; }
-      if (!s.rec) { mapMsg(`“${s.name}” has no recording, so it cannot go on the map.`); return; }
-      if (tab === 'rebuild') return;
-      {
-        selUid = s.uid; renderCurrent();
-        if (!shapes.some(x => x.uid === s.uid)) { placing = s.uid; mapMsg(`Tap the plane to put “${s.name}” there.`); }
-        else tip();
-      }
-      return;
-    }
+    if (isMap()) { mapMsg('To add a sound here, choose Draw and speak while you draw.'); return; }
     loadItem(s);
   });
   $('shelfMsg').addEventListener('click', e => {
@@ -1295,39 +1295,41 @@ dialog { background: var(--solid); }
     renderShelf();
   }
 
-  // ================= MORPH: the sound plane =================
-  // Sounds sit on the plane as dots and lines (a sound lives along its whole line). A path is a route with no sound of its own.
-  let shapes = [], shapeId = 0, tool = 'listen', selUid = null, placing = null, stroke = null, erasing = false, pathPlay = null;
-  let pt = null, sqDown = false, sqGeom = null, blend = null, weights = null, nearQ = [];
-  const SMOOTH = 0.65, blendMode = 'number', PATH_MS = 6000;
-  // only your own recordings are on the map; Rebuild also needs a pitch to regenerate from
+  // ================= MORPH: draw with your voice =================
+  // Press on the plane and speak: the recording belongs to what you draw. A tap is a dot; a drag is a line,
+  // with the recording laid along it from where you started to where you stopped.
+  let shapes = [], shapeId = 0, tool = 'draw', stroke = null, erasing = false, downNow = false, pathPlay = null;
+  let pt = null, sqDown = false, sqGeom = null, blend = null, weights = null, nearQ = [], nearT = [];
+  const SMOOTH = 0.65, blendMode = 'number';
+  function pathUI() { /* no path on this page */ }
+  // only your own recordings are on the plane; Rebuild also needs a pitch to regenerate from
   const placed = () => shelf.filter(s => !s.example && s.rec && s.rec.data && (vMode() === 'real' || s.f0) && shapes.some(h => h.uid === s.uid));
-  const rateOf = d => blend && d.f0 ? clamp(blend.f0 / d.f0, 0.25, 4) : 1;   // on its own dot the rate is 1: the recording as it is
+  const rateOf = d => blend && d.f0 ? clamp(blend.f0 / d.f0, 0.25, 4) : 1;   // on its own drawing the rate is 1: the recording as it is
   const mapMsg = t => { $('sqMsg').textContent = t; };
-  // distance from p to a shape, and the closest point on it
+  // distance from p to a drawing, the closest point on it, and (on a line) the moment of the recording there
   function shapeDist(h, p) {
     const P = h.pts;
-    if (P.length === 1) return { d: Math.hypot(P[0].x - p.x, P[0].y - p.y), q: P[0] };
-    let best = { d: Infinity, q: P[0] };
+    if (P.length === 1) return { d: Math.hypot(P[0].x - p.x, P[0].y - p.y), q: P[0], t: null };
+    let best = { d: Infinity, q: P[0], t: null };
     for (let i = 1; i < P.length; i++) {
       const a = P[i - 1], b = P[i], vx = b.x - a.x, vy = b.y - a.y, L = vx * vx + vy * vy;
       const u = L ? clamp(((p.x - a.x) * vx + (p.y - a.y) * vy) / L, 0, 1) : 0, q = { x: a.x + u * vx, y: a.y + u * vy }, d = Math.hypot(q.x - p.x, q.y - p.y);
-      if (d < best.d) best = { d, q };
+      if (d < best.d) best = { d, q, t: a.t != null && b.t != null ? a.t + u * (b.t - a.t) : null };
     }
     return best;
   }
-  // each sound counts by 1 / distance^2.05 to its nearest dot or line; on a dot or line, only that sound counts
+  // each recording counts by 1 / distance^2 to its drawing; on a drawing, only that recording counts
   function weightsAt(p) {
-    const D = placed(); nearQ = [];
+    const D = placed(); nearQ = []; nearT = [];
     if (!p || !D.length) return null;
     const near = D.map(s => shapes.filter(h => h.uid === s.uid).map(h => shapeDist(h, p)).reduce((a, b) => b.d < a.d ? b : a));
-    nearQ = near.map(n => n.q);
+    nearQ = near.map(n => n.q); nearT = near.map(n => n.t);
     const hit = near.findIndex(n => n.d < 1e-4);
     if (hit >= 0) return D.map((_, i) => i === hit ? 1 : 0);
     const pw = 4 - 3 * SMOOTH, inv = near.map(n => 1 / Math.pow(n.d, pw)), tot = inv.reduce((a, v) => a + v, 0);
     return inv.map(v => v / tot);
   }
-  // the blend: pitch averaged on a musical (log) scale, harmonic n from every sound's harmonic n
+  // the rebuilt blend: pitch averaged on a musical (log) scale, harmonic n from every recording's harmonic n
   function blendAt(w) {
     const D = placed(); if (!w) return null;
     const P = D.map((d, i) => ({ d, w: w[i] })).filter(o => o.w > 1e-4 && o.d.f0 > 0), W = P.reduce((a, o) => a + o.w, 0);
@@ -1335,134 +1337,91 @@ dialog { background: var(--solid); }
     const f0 = Math.exp(P.reduce((a, o) => a + o.w * Math.log(o.d.f0), 0) / W), harm = new Float32Array(NH);
     for (let n = 1; n <= NH; n++) harm[n - 1] = P.reduce((a, o) => a + o.w * (o.d.harm[n - 1] || 0), 0) / W;
     const m = Math.max(...harm, 1e-9); for (let i = 0; i < NH; i++) harm[i] /= m;
-    return { f0, harm, stretch: P.reduce((a, o) => a + o.w * (o.d.stretch || 0), 0) / W, mode: 'harm', list: [], weights: w };
+    return { f0, harm, stretch: 0, mode: 'harm', list: [], weights: w };
   }
   function refreshMorph() { weights = weightsAt(pt); blend = blendAt(weights); showRecUI(); update(); }
   function sqPoint(e) {
     const r = $('square').getBoundingClientRect(), { pad, side } = sqGeom, px = e.clientX - r.left, py = e.clientY - r.top;
     return { x: clamp((px - pad) / side, 0, 1), y: clamp((py - pad) / side, 0, 1) };
   }
-  function hitShape(q, kinds, px = 14) {
+  function hitShape(q, px = 14) {
     let best = null;
-    shapes.forEach(h => { if (kinds && !kinds.includes(h.kind)) return; const r = shapeDist(h, q), dpx = r.d * sqGeom.side; if (dpx <= px && (!best || dpx < best.dpx)) best = { h, dpx, q: r.q }; });
+    shapes.forEach(h => { if (h.kind === 'path') return; const r = shapeDist(h, q), dpx = r.d * sqGeom.side; if (dpx <= px && (!best || dpx < best.dpx)) best = { h, dpx, q: r.q }; });
     return best;
   }
-  const curSound = () => shelf.find(x => x.uid === selUid && !x.example && x.rec) || null;
-  function renderCurrent() {
-    if (!curSound()) { const f = shelf.find(x => !x.example && x.rec); selUid = f ? f.uid : null; }
-    const s = curSound();
-    $('mCurrent').innerHTML = s ? `Your sound: <i style="background:var(--s${s.slot % 8 + 1})"></i><b>${esc(s.name)}</b>` : 'Press <b>Record</b> to make your first sound.';
-  }
   function tip() {
-    const s = curSound();
-    if (placing) return;
-    if (tab === 'rebuild') { mapMsg(placed().length ? 'Touch and drag to hear the rebuilt mix, or press Play to follow your path.' : 'Record sounds on the Morph tab first.'); return; }
+    if (stroke) return;
+    if (tab === 'rebuild') { mapMsg(placed().length ? 'Touch and drag to hear your drawings rebuilt from pitch and harmonics.' : 'Draw on the Morph tab first.'); return; }
     mapMsg({
-      listen: 'Touch and drag on the plane to hear your sounds mix.',
-      draw: s ? `Draw a line for “${s.name}”. Anywhere on the line plays it.` : 'Record a sound first, then draw its line.',
-      path: 'Draw a route across the plane, then press Play.',
-      erase: 'Rub over a dot, line or path to erase it.',
+      draw: 'Press and hold on the plane and speak. Lift to stop. Tap for a dot, drag for a line.',
+      listen: 'Touch and drag to hear your recordings mix.',
+      erase: 'Rub over a drawing to erase it.',
     }[tool]);
   }
   function setTool(v) {
-    tool = v; placing = null;
-    document.querySelectorAll('#mTool .tool[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === v));
+    tool = v;
+    document.querySelectorAll('#mTool .tool').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === v));
     $('square').style.cursor = v === 'erase' ? 'cell' : 'crosshair';
     tip(); dirty = true;
   }
   $('mTool').addEventListener('click', e => {
-    const b = e.target.closest('.tool'); if (!b || b.disabled) return;
-    if (b.dataset.mode) setTool(b.dataset.mode);
-    else if (b.id === 'mRec') recordToggle();
-    else if (b.id === 'pathPlay') togglePath();
+    const b = e.target.closest('.tool'); if (!b) return;
+    setTool(b.dataset.mode);
+    if (b.dataset.mode === 'draw' && !mic) startMic().then(() => { if (!mic) mapMsg('The microphone is not available. Allow it in your browser, then try again.'); });
   });
-  function shapesChanged() { persist(); refreshMorph(); pathUI(); dirty = true; }
-  function sqPlayAt(q) {
-    const hit = hitShape(q, ['point', 'line']);
-    pt = hit ? { ...hit.q } : q;
-    if (hit && hit.h.uid !== selUid) { selUid = hit.h.uid; renderCurrent(); }
-    refreshMorph();
-  }
+  function shapesChanged() { persist(); refreshMorph(); dirty = true; }
+  function sqPlayAt(q) { const hit = hitShape(q); pt = hit ? { ...hit.q } : q; refreshMorph(); }
   function eraseAt(q) {
-    const hit = hitShape(q, null, 16); if (!hit) return;
-    shapes = shapes.filter(h => h !== hit.h); if (hit.h.kind === 'path') stopPath(); shapesChanged();
+    const hit = hitShape(q, 16); if (!hit) return;
+    shapes = shapes.filter(h => h !== hit.h);
+    const s = shelf.find(x => x.uid === hit.h.uid);
+    if (s && s.drawn && !shapes.some(h => h.uid === s.uid)) { shelf = shelf.filter(x => x !== s); recDel(s.uid); }
+    shapesChanged();
   }
-  $('square').addEventListener('pointerdown', e => {
+  const fadeEdges = (data, sr) => { const o = data.slice(), f = Math.min(Math.round(0.015 * sr), o.length >> 2); for (let i = 0; i < f; i++) { const g = i / f; o[i] *= g; o[o.length - 1 - i] *= g; } return o; };
+  $('square').addEventListener('pointerdown', async e => {
     if (!sqGeom) return;
-    const q = sqPoint(e); $('square').setPointerCapture(e.pointerId);
-    if (placing) {
-      const s = shelf.find(x => x.uid === placing); placing = null;
-      if (s) { shapes.push({ id: ++shapeId, uid: s.uid, kind: 'point', pts: [q] }); shapesChanged(); setTool('listen'); mapMsg(`“${s.name}” is on the plane. Touch around it to listen, or use Draw to give it a line.`); }
-      return;
+    const q = sqPoint(e); $('square').setPointerCapture(e.pointerId); downNow = true;
+    if (tool === 'listen') { ensureAudio(); ac.resume(); sqDown = true; sqPlayAt(q); return; }
+    if (tool === 'erase') { erasing = true; eraseAt(q); return; }
+    if (stroke || recording) return;
+    if (!mic) {
+      mapMsg('Starting the microphone…'); await startMic();
+      if (!mic) { mapMsg('The microphone is not available. Allow it in your browser, then try again.'); return; }
+      if (!downNow) { mapMsg('Microphone ready. Press and hold while you speak.'); return; }
     }
-    if (tool === 'listen') { ensureAudio(); ac.resume(); stopPath(); sqDown = true; sqPlayAt(q); return; }
-    if (tool === 'draw') { if (!curSound()) { mapMsg('Record a sound first, then draw its line.'); return; } stroke = { kind: 'line', uid: selUid, pts: [q] }; return; }
-    if (tool === 'path') { stroke = { kind: 'path', uid: null, pts: [q] }; return; }
-    if (tool === 'erase') { erasing = true; eraseAt(q); }
+    if (playing) setPlaying(false);
+    stroke = { pts: [{ ...q, t: 0 }], t0: performance.now() };
+    recTarget = 'map'; recChunks = []; recLen = 0; recording = true; micUI(); dirty = true;
   });
   $('square').addEventListener('pointermove', e => {
     if (!sqGeom) return;
     const q = sqPoint(e);
-    if (stroke) { const last = stroke.pts[stroke.pts.length - 1]; if (Math.hypot(q.x - last.x, q.y - last.y) > 0.006) { stroke.pts.push(q); dirty = true; } return; }
+    if (stroke) { const last = stroke.pts[stroke.pts.length - 1]; if (Math.hypot(q.x - last.x, q.y - last.y) > 0.005) { stroke.pts.push({ ...q, t: (performance.now() - stroke.t0) / 1000 }); dirty = true; } return; }
     if (erasing) { eraseAt(q); return; }
     if (sqDown) sqPlayAt(q);
   });
   const sqUp = () => {
-    if (stroke) {
-      if (stroke.pts.length >= 2) {
-        if (stroke.kind === 'path') { stopPath(); shapes = shapes.filter(h => h.kind !== 'path'); }
-        shapes.push({ id: ++shapeId, ...stroke }); shapesChanged();
-        mapMsg(stroke.kind === 'path' ? 'Route ready. Press Play to travel along it.' : 'Line drawn. Choose Listen and touch it to hear it.');
-      } else mapMsg('Hold down and drag to draw.');
-      stroke = null; dirty = true;
-    }
-    erasing = false;
+    downNow = false; erasing = false;
+    if (stroke && recording) stopRec();
     if (sqDown) { sqDown = false; update(); }
   };
   $('square').addEventListener('pointerup', sqUp);
   $('square').addEventListener('pointercancel', sqUp);
-  // record straight onto the plane: after Stop, the next tap places the new sound
-  async function recordToggle() {
-    if (recording) { stopRec(); return; }
-    stopPath(); recTarget = 'map';
-    await startRec();
-    if (!recording) { recTarget = 'voice'; mapMsg('The microphone is not available. Allow it in your browser, then try again.'); }
-    else mapMsg('Recording… make your sound, then press Stop.');
-  }
-  function addRecordingToMap(r) {
-    const name = $('saveName').value.trim() || `Sound ${shelf.filter(s => !s.example).length + 1}`;
-    const item = addToShelf(name, { f0: r.f0 || 0, harm: r.f0 ? Array.from(harmFromRec(r, r.f0, false)) : new Array(NH).fill(0), stretch: 0, mode: 'harm', list: [], mix: { h: 0.8, n: 0, color: 'white' }, filt: { on: false, bands: [] }, rec: r }, false);
-    if (!item) { mapMsg('My sounds is full. Delete one first.'); return; }
-    $('saveName').value = ''; selUid = item.uid; renderCurrent(); placing = item.uid;
-    mapMsg(r.f0 ? `Got it! Now tap the plane to put “${name}” there.` : `Got it! It has no clear note, so it will mix in without changing pitch. Tap the plane to put “${name}” there.`); dirty = true;
-  }
-  // the path: travel along the route from start to end
-  const pathShape = () => shapes.find(h => h.kind === 'path');
-  function pathAt(h, u) {
-    const P = h.pts, L = [0];
-    for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(P[i].x - P[i - 1].x, P[i].y - P[i - 1].y));
-    const target = u * L[L.length - 1]; let i = 1; while (i < P.length - 1 && L[i] < target) i++;
-    const seg = L[i] - L[i - 1] || 1, f = clamp((target - L[i - 1]) / seg, 0, 1);
-    return { x: P[i - 1].x + f * (P[i].x - P[i - 1].x), y: P[i - 1].y + f * (P[i].y - P[i - 1].y) };
-  }
-  function pathUI() {
-    $('pathPlay').disabled = !pathShape();
-    $('pathLabel').textContent = pathPlay ? 'Stop' : 'Play';
-    $('pathPlay').classList.toggle('on', !!pathPlay);
-    $('pathIcon').innerHTML = pathPlay ? '<rect x="7" y="7" width="10" height="10" rx="1.5"/>' : '<path d="M8 5.5v13l11-6.5z"/>';
-  }
-  function togglePath() {
-    if (pathPlay) { stopPath(); return; }
-    if (!pathShape()) return;
-    pathPlay = { t0: performance.now() }; setPlaying(true); pathUI(); mapMsg('Travelling along your route…');
-  }
-  function stopPath() { if (!pathPlay) return; pathPlay = null; setPlaying(false); pathUI(); tip(); }
-  function pathStep() {
-    if (!pathPlay) return;
-    const h = pathShape(); if (!h) { stopPath(); return; }
-    const u = (performance.now() - pathPlay.t0) / PATH_MS;
-    pt = pathAt(h, Math.min(u, 1)); refreshMorph();
-    if (u >= 1) stopPath();
+  // what was said while drawing becomes a dot or a line
+  function finishStroke(data) {
+    const st = stroke; stroke = null; if (!st) return;
+    let len = 0; for (let i = 1; i < st.pts.length; i++) len += Math.hypot(st.pts[i].x - st.pts[i - 1].x, st.pts[i].y - st.pts[i - 1].y);
+    const line = len > 0.02, r = analyse(line ? fadeEdges(data, micSR) : trimQuiet(data, micSR), micSR);
+    const item = addToShelf(`Drawing ${shelf.filter(x => x.drawn).length + 1}`, { f0: r.f0 || 0, harm: r.f0 ? Array.from(harmFromRec(r, r.f0, false)) : new Array(NH).fill(0), stretch: 0, mode: 'harm', list: [], mix: { h: 0.8, n: 0, color: 'white' }, filt: { on: false, bands: [] }, rec: r, drawn: true }, false);
+    if (!item) { mapMsg('That is a lot of drawings. Erase some first.'); dirty = true; return; }
+    // the line's points carry the moment of the recording they were drawn at, stretched to the recording's length
+    const k = r.dur / Math.max(st.pts[st.pts.length - 1].t, 1e-3);
+    shapes.push(line
+      ? { id: ++shapeId, uid: item.uid, kind: 'line', pts: st.pts.map(p => ({ x: p.x, y: p.y, t: Math.min(r.dur, p.t * k) })) }
+      : { id: ++shapeId, uid: item.uid, kind: 'point', pts: [{ x: st.pts[0].x, y: st.pts[0].y }] });
+    shapesChanged();
+    mapMsg(line ? 'Saved along your line. Choose Listen and move along it to hear it.' : 'Saved as a dot. Choose Listen and touch near it.');
   }
 
   // ================= GESTURES =================
@@ -1669,7 +1628,7 @@ dialog { background: var(--solid); }
   // the real mix: each recording read at its playback rate, weighted as it is played
   function realSignal() {
     const all = placed(), parts = all.map((d, i) => ({ d, w: weights[i] || 0 })).filter(o => o.w > 0.005 && o.d.rec && o.d.rec.data);
-    const P = parts.map(o => { const r = o.d.rec, rate = rateOf(o.d), a = Math.round(Math.min(0.03, r.dur / 4) * r.sr), z = Math.max(a + 10, r.data.length - Math.round(0.03 * r.sr)); return { x: r.data, k: o.w * 0.2 / recRms(r), step: rate * r.sr, a, len: z - a, off: Math.round(0.25 * (z - a)) }; });
+    const P = parts.map(o => { const r = o.d.rec, [ls, le] = loopWin(o.d), a = Math.round(ls * r.sr), len = Math.max(10, Math.min(r.data.length - a, Math.round((le - ls) * r.sr))); return { x: r.data, k: o.w * 0.2 / recRms(r), step: rateOf(o.d) * r.sr, a, len, off: 0 }; });
     const val = t => { let v = 0; for (const q of P) { const j = q.a + (q.off + Math.floor(t * q.step)) % q.len; v += q.k * q.x[j]; } return v; };
     return { val, fmax: 20000, noisy: true, real: true, empty: !P.length, E: [] };
   }
@@ -1823,60 +1782,50 @@ dialog { background: var(--solid); }
     const D = placed(), byUid = {}; shelf.forEach(s => { byUid[s.uid] = s; });
     const col = s => css(`--s${s.slot % 8 + 1}`), wOf = uid => { const i = D.findIndex(s => s.uid === uid); return weights && i >= 0 ? weights[i] || 0 : 0; };
     const poly = P => { g.beginPath(); P.forEach((p, i) => i ? g.lineTo(X(p), Y(p)) : g.moveTo(X(p), Y(p))); };
-    // the path: a dashed route with an arrow at its end
-    const path = pathShape();
-    if (path) {
-      g.strokeStyle = css('--ink'); g.globalAlpha = 0.55; g.lineWidth = 2; g.setLineDash([7, 6]); g.lineCap = 'round'; poly(path.pts); g.stroke(); g.setLineDash([]);
-      const a = path.pts[path.pts.length - 2], b = path.pts[path.pts.length - 1], ang = Math.atan2(Y(b) - Y(a), X(b) - X(a));
-      g.fillStyle = css('--ink'); g.beginPath(); g.moveTo(X(b), Y(b)); g.lineTo(X(b) - 11 * Math.cos(ang - 0.45), Y(b) - 11 * Math.sin(ang - 0.45)); g.lineTo(X(b) - 11 * Math.cos(ang + 0.45), Y(b) - 11 * Math.sin(ang + 0.45)); g.closePath(); g.fill();
+    // how much each recording counts: a line from your finger to the nearest point of its drawing
+    if (pt && weights && (sqDown || tool === 'listen')) {
+      D.forEach((s, i) => { const wi = weights[i] || 0, q = nearQ[i]; if (wi < 0.01 || !q) return; g.strokeStyle = col(s); g.globalAlpha = 0.25 + 0.75 * wi; g.lineWidth = 1 + 7 * wi; g.beginPath(); g.moveTo(X(pt), Y(pt)); g.lineTo(X(q), Y(q)); g.stroke(); });
       g.globalAlpha = 1;
     }
-    // how much each sound counts: a line from the cursor to the nearest point of that sound
-    if (pt && weights) {
-      const cx = X(pt), cy = Y(pt);
-      D.forEach((s, i) => { const wi = weights[i] || 0, q = nearQ[i]; if (wi < 0.01 || !q) return; g.strokeStyle = col(s); g.globalAlpha = 0.25 + 0.75 * wi; g.lineWidth = 1 + 7 * wi; g.beginPath(); g.moveTo(cx, cy); g.lineTo(X(q), Y(q)); g.stroke(); });
+    shapes.forEach(sh => {
+      const sd = byUid[sh.uid]; if (!sd || sh.kind === 'path') return;
+      const c = col(sd), wi = wOf(sh.uid); g.globalAlpha = D.includes(sd) ? 1 : 0.25;
+      if (sh.kind === 'line') {
+        g.lineCap = 'round'; g.lineJoin = 'round';
+        g.strokeStyle = alpha(c, 0.18 + 0.25 * wi); g.lineWidth = 16 + 14 * wi; poly(sh.pts); g.stroke();
+        g.strokeStyle = c; g.lineWidth = 6; g.shadowColor = alpha(c, 0.7); g.shadowBlur = 10; poly(sh.pts); g.stroke(); g.shadowBlur = 0;
+        const a = sh.pts[0]; g.fillStyle = c; g.beginPath(); g.arc(X(a), Y(a), 5, 0, 2 * Math.PI); g.fill();   // where the recording starts
+      } else {
+        const p = sh.pts[0];
+        g.fillStyle = c; g.globalAlpha *= 0.18; g.beginPath(); g.arc(X(p), Y(p), 19 + 14 * wi, 0, 2 * Math.PI); g.fill();
+        g.globalAlpha = D.includes(sd) ? 1 : 0.25; g.shadowColor = alpha(c, 0.7); g.shadowBlur = 12; g.beginPath(); g.arc(X(p), Y(p), 12, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
+      }
       g.globalAlpha = 1;
-    }
-    // lines, then points, each in its sound's colour
-    const label = (sd, p, offY) => { g.fillStyle = css('--ink'); g.font = font(12, 600); g.textAlign = p.x > 0.8 ? 'right' : p.x < 0.2 ? 'left' : 'center'; g.textBaseline = p.y > 0.85 ? 'bottom' : 'top'; g.fillText(sd.name, X(p), Y(p) + (p.y > 0.85 ? -offY : offY)); };
-    shapes.filter(sh => sh.kind === 'line').forEach(sh => {
-      const sd = byUid[sh.uid]; if (!sd) return; const c = col(sd), wi = wOf(sh.uid);
-      g.globalAlpha = D.includes(sd) ? 1 : 0.25;
-      g.lineCap = 'round'; g.lineJoin = 'round';
-      g.strokeStyle = alpha(c, 0.18 + 0.25 * wi); g.lineWidth = 16 + 14 * wi; poly(sh.pts); g.stroke();
-      g.strokeStyle = c; g.lineWidth = 6; g.shadowColor = alpha(c, 0.7); g.shadowBlur = 10; poly(sh.pts); g.stroke(); g.shadowBlur = 0;
-      label(sd, sh.pts[0], 12); g.globalAlpha = 1;
     });
-    shapes.filter(sh => sh.kind === 'point').forEach(sh => {
-      const sd = byUid[sh.uid]; if (!sd) return; const c = col(sd), wi = wOf(sh.uid), p = sh.pts[0];
-      if (!D.includes(sd)) { g.globalAlpha = 0.25; g.fillStyle = c; g.beginPath(); g.arc(X(p), Y(p), 12, 0, 2 * Math.PI); g.fill(); g.globalAlpha = 1; label(sd, p, 18); return; }
-      g.fillStyle = c; g.globalAlpha = 0.18; g.beginPath(); g.arc(X(p), Y(p), 19 + 14 * wi, 0, 2 * Math.PI); g.fill();
-      g.globalAlpha = 1; g.shadowColor = alpha(c, 0.7); g.shadowBlur = 12; g.beginPath(); g.arc(X(p), Y(p), 12, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
-      label(sd, p, 18);
-    });
-    // a stroke being drawn
-    if (stroke && stroke.pts.length > 1) {
-      const sd = byUid[stroke.uid];
-      g.strokeStyle = stroke.kind === 'path' ? css('--ink') : sd ? col(sd) : css('--accent'); g.lineWidth = stroke.kind === 'path' ? 2 : 6; g.lineCap = 'round'; g.lineJoin = 'round';
-      if (stroke.kind === 'path') g.setLineDash([7, 6]); poly(stroke.pts); g.stroke(); g.setLineDash([]);
+    // the drawing being recorded right now
+    if (stroke) {
+      const ca = css('--a');
+      g.strokeStyle = ca; g.fillStyle = ca; g.lineWidth = 6; g.lineCap = 'round'; g.lineJoin = 'round'; g.shadowColor = alpha(ca, 0.8); g.shadowBlur = 14;
+      if (stroke.pts.length > 1) { poly(stroke.pts); g.stroke(); }
+      const p = stroke.pts[stroke.pts.length - 1]; g.beginPath(); g.arc(X(p), Y(p), 9, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
     }
-    if (pt && (sqDown || pathPlay || (tool === 'listen' && weights))) {
+    if (pt && (sqDown || (tool === 'listen' && weights))) {
       const cx = X(pt), cy = Y(pt);
       g.strokeStyle = css('--ink'); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 9, 0, 2 * Math.PI); g.stroke();
       g.beginPath(); g.moveTo(cx - 15, cy); g.lineTo(cx - 5, cy); g.moveTo(cx + 5, cy); g.lineTo(cx + 15, cy); g.moveTo(cx, cy - 15); g.lineTo(cx, cy - 5); g.moveTo(cx, cy + 5); g.lineTo(cx, cy + 15); g.stroke();
     }
-    if (!shapes.length) { g.fillStyle = css('--muted'); g.font = font(14, 400); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(tab === 'rebuild' ? 'Record sounds on the Morph tab first' : 'Press Record to make your first sound', w / 2, h / 2); }
-    const mix = weights ? D.map((s, i) => [s, weights[i]]).filter(([, v]) => v >= 0.01).sort((a, b) => b[1] - a[1]).map(([s, v]) => `<b style="color:var(--s${s.slot % 8 + 1})">${esc(s.name)}</b> ${Math.round(v * 100)}%`).join(' · ') : '';
-    $('sqOut').innerHTML = (sqDown || pathPlay) && weights ? (blend ? `Pitch <b>${fmtF(blend.f0)}</b> · ` : '') + mix : '';
+    if (!shapes.some(sh => byUid[sh.uid]) && !stroke) { g.fillStyle = css('--muted'); g.font = font(14, 400); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(tab === 'rebuild' ? 'Draw on the Morph tab first' : 'Press and hold here, and speak', w / 2, h / 2); }
+    $('sqOut').innerHTML = sqDown && weights ? (blend ? `Pitch <b>${fmtF(blend.f0)}</b>` : '') : '';
   }
 
   // ================= loop =================
   function frame() {
-    gStep(); pathStep();
+    gStep();
     if (mic) {
       if (++vFrame % 3 === 0) { liveAnalyse(); micUI(); }
       if (tab === 'voice') dirty = true;
     }
+    if (stroke) dirty = true;
     if (dirty) { dirty = false; drawWave(); drawSpec(); if (isMap()) drawSquare(); }
     if (barsDirty && tab === 'build') drawBars();
     if (padDirty) drawPad();
@@ -1893,7 +1842,7 @@ dialog { background: var(--solid); }
   // ================= start =================
   loadShelf();
   fillR($('vol')); fillR($('shift'));
-  syncBuild(); setTab('build'); micUI(); showRecUI(); pathUI(); renderCurrent(); tip();
+  syncBuild(); setTab('build'); micUI(); showRecUI(); setTool('draw');
   recLoadAll();
   requestAnimationFrame(frame);
 })();
