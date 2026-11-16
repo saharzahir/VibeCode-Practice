@@ -154,6 +154,10 @@ select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
 .current { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; color: var(--muted); min-height: 1.5em; }
 .current i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 .current b { color: var(--ink); font-weight: 600; }
+.handrow { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.handcam { position: relative; width: 176px; aspect-ratio: 4 / 3; max-width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-line); background: var(--screen); flex: none; }
+.handcam video, .handcam canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); border: 0; border-radius: 0; background: transparent; }
+#handRead { min-width: 170px; }
 .maptip { margin: 0; text-align: center; font-size: 14.5px; color: var(--ink); min-height: 1.5em; }
 .maphint { text-align: center; min-height: 1.4em; }
 .linkbtn { border: 0; background: none; padding: 0; font: 600 12.5px var(--font-body); color: var(--ink); text-decoration: underline; cursor: pointer; }
@@ -353,8 +357,14 @@ dialog { background: var(--solid); }
       <!-- ===================== MORPH ===================== -->
       <div class="tabpanel" id="tab-morph" role="tabpanel" aria-labelledby="t-morph" hidden>
         <section class="card mapcard">
+          <div class="row" style="justify-content:center"><span class="lbl">Control</span>
+            <div class="seg" id="mCtl"><button data-v="finger" aria-pressed="true">Finger</button><button data-v="hand" aria-pressed="false">Hand</button></div></div>
+          <div class="handrow" id="handRow" hidden>
+            <div class="handcam"><video id="hvid" playsinline muted></video><canvas id="hov"></canvas></div>
+            <div class="hint" id="handRead">Show one hand to the camera, fingers pointing up.</div>
+          </div>
           <div class="toolbar" id="mTool" role="toolbar" aria-label="Tools">
-            <button class="tool edit" data-mode="draw" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.2L15.8 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"/><path d="M14 6.8l3.2 3.2"/></svg><span>Draw</span></button>
+            <button class="tool edit" data-mode="draw" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.2L15.8 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"/><path d="M14 6.8l3.2 3.2"/></svg><span id="drawLabel">Draw</span></button>
             <button class="tool" data-mode="listen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.8"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.8"/></svg><span>Listen</span></button>
             <button class="tool edit" data-mode="erase" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.6 4.4l5 5L11 18H6.5L3.8 15.3a1.6 1.6 0 0 1 0-2.3z"/><path d="M9 10l5 5"/><path d="M12.5 21H20"/></svg><span>Erase</span></button>
           </div>
@@ -437,6 +447,11 @@ dialog { background: var(--solid); }
         <li><b>Listen</b>: touch or drag anywhere. Near a drawing you hear it; in between, your recordings mix.</li>
         <li><b>Erase</b>: rub over a drawing to remove it.</li>
         <li>The <b>Rebuild</b> tab plays the same drawings remade from pitch and harmonics.</li></ol></div>
+      <div class="step"><h3><small>Morph · Hand</small>Steer with your hand</h3><ol>
+        <li>Switch <b>Control</b> to <b>Hand</b> and allow the camera. Hold one hand up, fingers pointing at the ceiling.</li>
+        <li><b>Tilt</b> your hand left or right to move left or right. <b>Bend your knuckles</b> (open hand → fist) to move down.</li>
+        <li>To add a sound: hold a pose, press <b>Record</b> (or the space bar) and sing. Hold still for a dot, move your hand for a line. Press <b>Stop</b>.</li>
+        <li>In <b>Listen</b>, the sound follows your hand.</li></ol></div>
       <div class="step" hidden><h3><small>Morph</small>The sound plane</h3><ol>
         <li><b>Record</b>: make a sound, press Stop, then tap the plane to put it there.</li>
         <li><b>Draw</b>: draw a line for your sound. Anywhere on the line plays it.</li>
@@ -731,14 +746,14 @@ dialog { background: var(--solid); }
   // what is sounding right now: 'synth' (the Build sound), 'morph' (the blend), 'rec' (a recording) or 'none'
   function heard() {
     if (tab === 'voice' && rec) return (listen === 'switch' ? altNow : listen) === 'original' ? 'rec' : 'synth';
-    if (isMap()) return (playing || sqDown) && (vMode() === 'real' ? weights : blend) ? 'morph' : 'none';
+    if (isMap()) return (playing || sqDown || handOn) && (vMode() === 'real' ? weights : blend) ? 'morph' : 'none';
     return playing ? 'synth' : 'none';
   }
   const shownSound = () => isMap() ? blend : S;
   function update() {
     dirty = true; barsDirty = true;
     if (!ac) return;
-    const t = ac.currentTime, useF = filterOn(), h = (playing || sqDown) ? heard() : 'none';
+    const t = ac.currentTime, useF = filterOn(), h = (playing || sqDown || handOn) ? heard() : 'none';
     fDry.gain.setTargetAtTime(useF ? 0 : 1, t, 0.02); fWet.gain.setTargetAtTime(useF ? 1 : 0, t, 0.02);
     out.gain.setTargetAtTime(vol, t, 0.02);
     const synth = h === 'synth' || h === 'morph', real = h === 'morph' && vMode() === 'real';
@@ -877,6 +892,7 @@ dialog { background: var(--solid); }
     ['noiseCard', 'filterCard', 'gestCard'].forEach(id => home.appendChild($(id)));
     document.querySelector('.layout').classList.toggle('wide', map);
     if (map && gSrc !== 'off') pickSrc('off');
+    if (!map && ctl === 'hand') setCtl('finger');
     gMapText();
     if (map) { refreshMorph(); tip(); }
     if (t !== 'voice') clearInterval(altTimer);
@@ -1130,9 +1146,10 @@ dialog { background: var(--solid); }
     dirty = true; barsDirty = true;
   }
   function micUI() {
+    if (typeof drawBtnUI === 'function') drawBtnUI();
     $('micBtn').setAttribute('aria-pressed', !!mic); $('micLabel').textContent = mic ? 'On' : 'Turn on';
     $('recBtn').setAttribute('aria-pressed', recording); $('recBtn').textContent = recording ? '■ Stop' : '● Record';
-    if (recording && recTarget === 'map') mapMsg(`Recording… ${(recLen / micSR).toFixed(1)} s. Lift to stop.`);
+    if (recording && recTarget === 'map') mapMsg(`Recording… ${(recLen / micSR).toFixed(1)} s. ${stroke && stroke.byHand ? 'Press Stop (or the space bar) to finish.' : 'Lift to stop.'}`);
     $('recTime').textContent = recording ? `${(recLen / micSR).toFixed(1)} s of ${REC_MAX} s` : rec ? `${rec.dur.toFixed(1)} s recorded` : 'nothing yet';
     const p = mic ? livePitch : rec ? rec.f0 : 0;
     $('pitchOut').textContent = p ? fmtF(p) : '—'; $('pitchNote').textContent = p ? noteName(p) : mic ? 'no steady pitch' : '';
@@ -1351,7 +1368,16 @@ dialog { background: var(--solid); }
   }
   function tip() {
     if (stroke) return;
-    if (tab === 'rebuild') { mapMsg(placed().length ? 'Touch and drag to hear your drawings rebuilt from pitch and harmonics.' : 'Draw on the Morph tab first.'); return; }
+    if (ctl === 'hand' && !handStream) return;   // the camera start-up messages are showing
+    if (tab === 'rebuild') { mapMsg(!placed().length ? 'Draw on the Morph tab first.' : ctl === 'hand' ? 'Tilt your hand and bend your knuckles to hear the rebuilt mix.' : 'Touch and drag to hear your drawings rebuilt from pitch and harmonics.'); return; }
+    if (ctl === 'hand') {
+      mapMsg({
+        draw: 'Hold your hand in a pose, press Record (or the space bar) and sing. Move your hand to draw a line. Press Stop when done.',
+        listen: 'Tilt your hand and bend your knuckles to move through your sounds.',
+        erase: 'Rub over a drawing with your mouse or finger to erase it.',
+      }[tool]);
+      return;
+    }
     mapMsg({
       draw: 'Press and hold on the plane and speak. Lift to stop. Tap for a dot, drag for a line.',
       listen: 'Touch and drag to hear your recordings mix.',
@@ -1367,6 +1393,7 @@ dialog { background: var(--solid); }
   $('mTool').addEventListener('click', e => {
     const b = e.target.closest('.tool'); if (!b) return;
     setTool(b.dataset.mode);
+    if (b.dataset.mode === 'draw' && ctl === 'hand') { handRecToggle(); return; }
     if (b.dataset.mode === 'draw' && !mic) startMic().then(() => { if (!mic) mapMsg('The microphone is not available. Allow it in your browser, then try again.'); });
   });
   function shapesChanged() { persist(); refreshMorph(); dirty = true; }
@@ -1403,7 +1430,7 @@ dialog { background: var(--solid); }
   });
   const sqUp = () => {
     downNow = false; erasing = false;
-    if (stroke && recording) stopRec();
+    if (stroke && !stroke.byHand && recording) stopRec();
     if (sqDown) { sqDown = false; update(); }
   };
   $('square').addEventListener('pointerup', sqUp);
@@ -1420,9 +1447,124 @@ dialog { background: var(--solid); }
     shapes.push(line
       ? { id: ++shapeId, uid: item.uid, kind: 'line', pts: st.pts.map(p => ({ x: p.x, y: p.y, t: Math.min(r.dur, p.t * k) })) }
       : { id: ++shapeId, uid: item.uid, kind: 'point', pts: [{ x: st.pts[0].x, y: st.pts[0].y }] });
-    shapesChanged();
-    mapMsg(line ? 'Saved along your line. Choose Listen and move along it to hear it.' : 'Saved as a dot. Choose Listen and touch near it.');
+    shapesChanged(); drawBtnUI();
+    const how = st.byHand ? 'move your hand' : 'touch';
+    mapMsg(line ? `Saved along your line. Choose Listen and ${how} along it to hear it.` : `Saved as a dot. Choose Listen and ${how} near it.`);
   }
+
+  // ================= HAND: steer the plane with two angles of your hand =================
+  // left ↔ right: how far the hand leans from straight up; up ↕ down: how far the fingers bend at the knuckles
+  const HAND_MODEL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+  const HAND_BONES = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
+  let ctl = 'finger', handStream = null, handTracker = null, handToken = 0, handPt = null, handSeen = 0, handOn = false, lastHVT = -1;
+  function handAngles(L) {
+    const w = L[0], m = L[9];
+    // the camera image is not mirrored, so leaning to your right moves your fingers toward smaller x
+    const tilt = -Math.atan2(m.x - w.x, -(m.y - w.y)) * 180 / Math.PI;
+    const ang = (a, b, c) => {
+      const u = [b.x - a.x, b.y - a.y, b.z - a.z], v = [c.x - b.x, c.y - b.y, c.z - b.z], n = Math.hypot(...u) * Math.hypot(...v);
+      return n ? Math.acos(clamp((u[0] * v[0] + u[1] * v[1] + u[2] * v[2]) / n, -1, 1)) * 180 / Math.PI : 0;
+    };
+    // knuckle bend: the angle at each knuckle between palm (wrist → knuckle) and finger (knuckle → middle joint), averaged over four fingers
+    const bend = [[5, 6], [9, 10], [13, 14], [17, 18]].reduce((t, [k, j]) => t + ang(w, L[k], L[j]), 0) / 4;
+    return { tilt, bend };
+  }
+  // tilted 45° left … right spans the plane left to right; open (about 10°) … bent (about 90°) spans top to bottom
+  const handToPlane = a => ({ x: clamp(0.5 + a.tilt / 90, 0, 1), y: clamp((a.bend - 10) / 80, 0, 1) });
+  function handInput(p) {
+    handSeen = performance.now();
+    handPt = handPt ? { x: handPt.x + (p.x - handPt.x) * 0.35, y: handPt.y + (p.y - handPt.y) * 0.35 } : { ...p };
+    if (stroke && stroke.byHand) {
+      const last = stroke.pts[stroke.pts.length - 1];
+      if (Math.hypot(handPt.x - last.x, handPt.y - last.y) > 0.005) stroke.pts.push({ ...handPt, t: (performance.now() - stroke.t0) / 1000 });
+    } else if (tool === 'listen' || tab === 'rebuild') { pt = { ...handPt }; handOn = true; refreshMorph(); }
+    dirty = true;
+  }
+  function drawBtnUI() {
+    const rec = !!(stroke && stroke.byHand);
+    $('drawLabel').textContent = ctl === 'hand' ? (rec ? 'Stop' : 'Record') : 'Draw';
+    document.querySelector('#mTool [data-mode=draw]').classList.toggle('on', rec);
+  }
+  // with the hand, recording starts and stops with the Record button or the space bar; the hand is the pen
+  async function handRecToggle() {
+    if (stroke && stroke.byHand) { if (recording) stopRec(); drawBtnUI(); return; }
+    if (!handPt) { mapMsg('Show your hand to the camera first.'); return; }
+    if (recording) return;
+    if (!mic) { await startMic(); if (!mic) { mapMsg('The microphone is not available. Allow it in your browser, then try again.'); return; } }
+    if (playing) setPlaying(false);
+    handOn = false;
+    stroke = { pts: [{ ...handPt, t: 0 }], t0: performance.now(), byHand: true };
+    recTarget = 'map'; recChunks = []; recLen = 0; recording = true; micUI(); dirty = true;
+  }
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space' || !isMap() || ctl !== 'hand' || tab === 'rebuild' || e.repeat) return;
+    if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(document.activeElement.tagName)) return;   // a focused button handles the space itself
+    e.preventDefault(); setTool('draw'); handRecToggle();
+  });
+  async function loadHandTracker() {
+    const V = await import(MPV + '/vision_bundle.mjs'), fs = await V.FilesetResolver.forVisionTasks(MPV + '/wasm');
+    const opts = d => ({ baseOptions: { modelAssetPath: HAND_MODEL, delegate: d }, runningMode: 'VIDEO', numHands: 1 });
+    try { return await V.HandLandmarker.createFromOptions(fs, opts('GPU')); } catch (err) { return await V.HandLandmarker.createFromOptions(fs, opts('CPU')); }
+  }
+  async function startHand() {
+    const token = ++handToken, v = $('hvid');
+    $('handRow').hidden = false;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { mapMsg('The camera needs a secure (https) page.'); return; }
+    mapMsg('Starting the camera…');
+    let st;
+    try { st = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }, audio: false }); }
+    catch (err) { if (token === handToken) { mapMsg('The camera is not available. Allow it in your browser, then try again.'); setCtl('finger'); } return; }
+    if (token !== handToken) { st.getTracks().forEach(t => t.stop()); return; }
+    v.srcObject = st; await v.play().catch(() => {});
+    if (!handTracker) {
+      mapMsg('Loading the hand tracker (a few MB, only the first time)…');
+      try { handTracker = await loadHandTracker(); }
+      catch (err) { if (token === handToken) mapMsg('The hand tracker could not load. Check your internet connection, then switch to Hand again.'); return; }
+    }
+    if (token !== handToken) return;
+    handStream = st; tip();
+    requestAnimationFrame(() => handLoop(token));
+  }
+  function stopHand() {
+    handToken++;
+    const v = $('hvid'); if (v.srcObject) v.srcObject.getTracks().forEach(t => t.stop());
+    v.srcObject = null; handStream = null; $('handRow').hidden = true; handPt = null; handOn = false;
+    if (stroke && stroke.byHand && recording) stopRec();
+    update(); dirty = true;
+  }
+  function handLoop(token) {
+    if (token !== handToken || !handStream) return;
+    const v = $('hvid');
+    if (v.readyState >= 2 && v.currentTime !== lastHVT) {
+      lastHVT = v.currentTime;
+      let res = null; try { res = handTracker.detectForVideo(v, performance.now()); } catch (err) { res = null; }
+      const L = res && res.landmarks && res.landmarks[0];
+      drawHand(L);
+      if (L) {
+        const a = handAngles(L);
+        $('handRead').innerHTML = `Tilt <b>${Math.round(Math.abs(a.tilt))}° ${a.tilt >= 0 ? 'right' : 'left'}</b> · Knuckles <b>${Math.round(clamp(a.bend - 10, 0, 90))}°</b>`;
+        handInput(handToPlane(a));
+      } else $('handRead').textContent = 'No hand in view';
+    }
+    requestAnimationFrame(() => handLoop(token));
+  }
+  function drawHand(L) {
+    const c = $('hov'), v = $('hvid');
+    if (c.width !== v.videoWidth && v.videoWidth) { c.width = v.videoWidth; c.height = v.videoHeight; }
+    const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height);
+    if (!L) return;
+    g.strokeStyle = css('--a'); g.lineWidth = Math.max(2, c.width / 120); g.lineCap = 'round';
+    HAND_BONES.forEach(([a, b]) => { g.beginPath(); g.moveTo(L[a].x * c.width, L[a].y * c.height); g.lineTo(L[b].x * c.width, L[b].y * c.height); g.stroke(); });
+    g.fillStyle = css('--solid'); L.forEach(q => { g.beginPath(); g.arc(q.x * c.width, q.y * c.height, c.width / 90, 0, 2 * Math.PI); g.fill(); });
+  }
+  function setCtl(v) {
+    if (v === ctl) return;
+    ctl = v; setSeg('mCtl', v);
+    if (v === 'hand') startHand(); else { stopHand(); tip(); }
+    drawBtnUI(); dirty = true;
+  }
+  onSeg('mCtl', setCtl);
+  if (location.hash === '#test') window.__hand = { input: handInput, angles: handAngles, toPlane: handToPlane, rec: handRecToggle };
 
   // ================= GESTURES =================
   // one set of smoothed inputs (x, y, spread, tilt from 0 to 1); Build turns them into pitch, harmonics, brightness, stretch; Morph into a point in the square
@@ -1809,13 +1951,24 @@ dialog { background: var(--solid); }
       if (stroke.pts.length > 1) { poly(stroke.pts); g.stroke(); }
       const p = stroke.pts[stroke.pts.length - 1]; g.beginPath(); g.arc(X(p), Y(p), 9, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
     }
+    if (ctl === 'hand') {
+      // the two angles on the edges of the plane
+      g.fillStyle = css('--muted'); g.font = font(11, 500);
+      g.textAlign = 'center'; g.textBaseline = 'top'; g.fillText('← tilt left   ·   hand tilt   ·   tilt right →', pad + side / 2, pad + side + 4);
+      g.save(); g.translate(pad - 6, pad + side / 2); g.rotate(-Math.PI / 2); g.textBaseline = 'bottom'; g.fillText('bent ←   knuckles   → open', 0, 0); g.restore();
+      if (handPt) {
+        const hx = X(handPt), hy = Y(handPt), rec = stroke && stroke.byHand, c = rec ? css('--a') : css('--ink');
+        g.strokeStyle = c; g.fillStyle = c; g.lineWidth = 2.5; g.shadowColor = alpha(css('--a'), 0.7); g.shadowBlur = rec ? 14 : 0;
+        g.beginPath(); g.arc(hx, hy, 13, 0, 2 * Math.PI); g.stroke(); g.beginPath(); g.arc(hx, hy, 4, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
+      }
+    }
     if (pt && (sqDown || (tool === 'listen' && weights))) {
       const cx = X(pt), cy = Y(pt);
       g.strokeStyle = css('--ink'); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 9, 0, 2 * Math.PI); g.stroke();
       g.beginPath(); g.moveTo(cx - 15, cy); g.lineTo(cx - 5, cy); g.moveTo(cx + 5, cy); g.lineTo(cx + 15, cy); g.moveTo(cx, cy - 15); g.lineTo(cx, cy - 5); g.moveTo(cx, cy + 5); g.lineTo(cx, cy + 15); g.stroke();
     }
     if (!shapes.some(sh => byUid[sh.uid]) && !stroke) { g.fillStyle = css('--muted'); g.font = font(14, 400); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(tab === 'rebuild' ? 'Draw on the Morph tab first' : 'Press and hold here, and speak', w / 2, h / 2); }
-    $('sqOut').innerHTML = sqDown && weights ? (blend ? `Pitch <b>${fmtF(blend.f0)}</b>` : '') : '';
+    $('sqOut').innerHTML = (sqDown || handOn) && weights ? (blend ? `Pitch <b>${fmtF(blend.f0)}</b>` : '') : '';
   }
 
   // ================= loop =================
@@ -1826,6 +1979,7 @@ dialog { background: var(--solid); }
       if (tab === 'voice') dirty = true;
     }
     if (stroke) dirty = true;
+    if (handOn && performance.now() - handSeen > 400) { handOn = false; update(); }
     if (dirty) { dirty = false; drawWave(); drawSpec(); if (isMap()) drawSquare(); }
     if (barsDirty && tab === 'build') drawBars();
     if (padDirty) drawPad();
