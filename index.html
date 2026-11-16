@@ -147,6 +147,8 @@ select { padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px;
 .tool { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px 10px; border-radius: 16px; border: 1px solid var(--field-line); background: var(--field); color: var(--ink); font: 500 12.5px/1 var(--font-body); cursor: pointer; transition: background .15s, box-shadow .15s; }
 .tool svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .tool:hover { border-color: var(--line); }
+.mapcard.rebuild .tool.edit, .mapcard.rebuild .current { display: none; }
+.mapcard.rebuild .toolbar { grid-template-columns: repeat(2, minmax(0, 150px)); justify-content: center; }
 .tool[aria-pressed="true"] { background: var(--sel-bg); color: var(--sel-ink); box-shadow: var(--sel-shadow); border-color: transparent; }
 .tool.on { background: linear-gradient(180deg, var(--cta-1), var(--cta-2)); color: var(--cta-ink); border-color: transparent; }
 .tool:disabled { opacity: .38; cursor: default; }
@@ -267,6 +269,7 @@ dialog { background: var(--solid); }
         <button role="tab" id="t-build" data-tab="build" aria-selected="true" aria-controls="tab-build">Build</button>
         <button role="tab" id="t-voice" data-tab="voice" aria-selected="false" aria-controls="tab-voice">Voice</button>
         <button role="tab" id="t-morph" data-tab="morph" aria-selected="false" aria-controls="tab-morph">Morph</button>
+        <button role="tab" id="t-rebuild" data-tab="rebuild" aria-selected="false" aria-controls="tab-morph">Rebuild</button>
       </div>
       <div class="spacer"></div>
       <label class="vol"><span class="lbl" style="color:inherit">Volume</span><input type="range" id="vol" min="0" max="100" value="60" aria-label="Volume"></label>
@@ -353,16 +356,15 @@ dialog { background: var(--solid); }
         <section class="card mapcard">
           <div class="toolbar" id="mTool" role="toolbar" aria-label="Tools">
             <button class="tool" data-mode="listen" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.8"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.8"/></svg><span>Listen</span></button>
-            <button class="tool" id="mRec"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span id="mRecLabel">Record</span></button>
-            <button class="tool" data-mode="draw" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.2L15.8 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"/><path d="M14 6.8l3.2 3.2"/></svg><span>Draw</span></button>
-            <button class="tool" data-mode="path" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2"/><path d="M7 17c4-1 2-7 6-8s3 2 5-3" stroke-dasharray="2.2 2.6"/><path d="M15.5 5.5L18 6l.5-2.6"/></svg><span>Path</span></button>
+            <button class="tool edit" id="mRec"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span id="mRecLabel">Record</span></button>
+            <button class="tool edit" data-mode="draw" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4.2L15.8 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"/><path d="M14 6.8l3.2 3.2"/></svg><span>Draw</span></button>
+            <button class="tool edit" data-mode="path" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2"/><path d="M7 17c4-1 2-7 6-8s3 2 5-3" stroke-dasharray="2.2 2.6"/><path d="M15.5 5.5L18 6l.5-2.6"/></svg><span>Path</span></button>
             <button class="tool" id="pathPlay" disabled><svg viewBox="0 0 24 24" aria-hidden="true" id="pathIcon"><path d="M8 5.5v13l11-6.5z"/></svg><span id="pathLabel">Play</span></button>
-            <button class="tool" data-mode="erase" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.6 4.4l5 5L11 18H6.5L3.8 15.3a1.6 1.6 0 0 1 0-2.3z"/><path d="M9 10l5 5"/><path d="M12.5 21H20"/></svg><span>Erase</span></button>
+            <button class="tool edit" data-mode="erase" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.6 4.4l5 5L11 18H6.5L3.8 15.3a1.6 1.6 0 0 1 0-2.3z"/><path d="M9 10l5 5"/><path d="M12.5 21H20"/></svg><span>Erase</span></button>
           </div>
           <div class="current" id="mCurrent"></div>
           <canvas id="square" aria-label="The sound plane. Dots and lines are your sounds; touch anywhere to hear them mix."></canvas>
           <p class="maptip" id="sqMsg" role="status"></p>
-          <div class="row" style="justify-content:center"><div class="seg" id="mVoice" aria-label="What you hear"><button data-v="real" aria-pressed="true">Real voice</button><button data-v="rebuilt" aria-pressed="false">Rebuilt</button></div></div>
           <div class="hint maphint" id="sqOut"></div>
         </section>
         <div class="slot" data-slot="morph"></div>
@@ -440,7 +442,7 @@ dialog { background: var(--solid); }
         <li><b>Listen</b>: touch and drag anywhere to hear your sounds mix. The closer a sound, the louder it is in the mix.</li>
         <li><b>Path</b>: draw a route, then press <b>Play</b> to travel along it.</li>
         <li><b>Erase</b>: rub over anything to remove it.</li>
-        <li><b>Real voice</b> plays your recordings themselves; <b>Rebuilt</b> remakes them from pitch and harmonics.</li></ol></div>
+        <li>Morph plays only your real recordings. The <b>Rebuild</b> tab plays the same map remade artificially from pitch and harmonics.</li></ol></div>
     </div>
   </div>
 </dialog>
@@ -505,9 +507,11 @@ dialog { background: var(--solid); }
 
   // ================= filter maths (the same formulas as Web Audio's biquad) =================
   const FTYPES = { bandpass: 'Band-pass', lowpass: 'Low-pass', highpass: 'High-pass', peaking: 'Peak' };
-  const filterOn = () => tab !== 'morph' && FILT.on && FILT.bands.length > 0;
+  // Morph and Rebuild share the map: Morph plays your recordings, Rebuild regenerates them
+  const isMap = () => tab === 'morph' || tab === 'rebuild', vMode = () => tab === 'rebuild' ? 'rebuilt' : 'real';
+  const filterOn = () => !isMap() && FILT.on && FILT.bands.length > 0;
   // Morph has no level, noise or filter controls, so it uses a plain fixed mix
-  const hLevel = () => tab === 'morph' ? 0.8 : MIX.h, noiseLevel = () => tab === 'morph' ? 0 : MIX.n;
+  const hLevel = () => isMap() ? 0.8 : MIX.h, noiseLevel = () => isMap() ? 0 : MIX.n;
   function coefs(b, sr) {
     const w0 = 2 * Math.PI * clamp(b.f, 10, sr / 2 - 10) / sr, cs = Math.cos(w0), al = Math.sin(w0) / (2 * b.q);
     let b0, b1, b2, a0, a1, a2;
@@ -726,23 +730,19 @@ dialog { background: var(--solid); }
   // what is sounding right now: 'synth' (the Build sound), 'morph' (the blend), 'rec' (a recording) or 'none'
   function heard() {
     if (tab === 'voice' && rec) return (listen === 'switch' ? altNow : listen) === 'original' ? 'rec' : 'synth';
-    if (tab === 'morph') return (playing || sqDown) && blend ? 'morph' : 'none';
+    if (isMap()) return (playing || sqDown) && (vMode() === 'real' ? weights : blend) ? 'morph' : 'none';
     return playing ? 'synth' : 'none';
   }
-  const shownSound = () => tab === 'morph' ? blend : S;
+  const shownSound = () => isMap() ? blend : S;
   function update() {
     dirty = true; barsDirty = true;
     if (!ac) return;
     const t = ac.currentTime, useF = filterOn(), h = (playing || sqDown) ? heard() : 'none';
     fDry.gain.setTargetAtTime(useF ? 0 : 1, t, 0.02); fWet.gain.setTargetAtTime(useF ? 1 : 0, t, 0.02);
     out.gain.setTargetAtTime(vol, t, 0.02);
-    const synth = h === 'synth' || h === 'morph', real = h === 'morph' && voiceMode === 'real';
-    // real voice: recordings play themselves; sine waves stand in only for sounds that have no recording
-    let synthSound = h === 'morph' ? blend : S, part = 1;
-    if (real) {
-      const D = placed(), wn = D.map((d, i) => d.rec ? 0 : (weights[i] || 0)), sum = wn.reduce((a, b) => a + b, 0);
-      if (sum > 1e-4) { synthSound = { ...blendAt(wn), f0: blend.f0 }; part = sum; } else synthSound = null;
-    }
+    const synth = h === 'synth' || h === 'morph', real = h === 'morph' && vMode() === 'real';
+    // Morph plays your recordings only (syncVoices); Rebuild plays the sine-wave regeneration
+    const synthSound = real ? null : h === 'morph' ? blend : S, part = 1;
     syncVoices(real);
     const P = synth && synthSound ? partialsOf(synthSound) : [], E = eff(P);
     bankG.gain.setTargetAtTime(synth ? hScale(E) * part : 0, t, 0.03);
@@ -764,7 +764,7 @@ dialog { background: var(--solid); }
   function syncVoices(on) {
     const t = ac.currentTime, D = on ? placed().filter(d => d.rec && d.rec.data) : [];
     voices.forEach((v, uid) => { if (!D.some(d => d.uid === uid)) { v.g.gain.setTargetAtTime(0, t, 0.04); v.src.stop(t + 0.3); voices.delete(uid); } });
-    if (!on || !blend) return;
+    if (!on || !weights) return;
     const all = placed();
     D.forEach(d => {
       let v = voices.get(d.uid);
@@ -777,7 +777,7 @@ dialog { background: var(--solid); }
         v = { src, g }; voices.set(d.uid, v);
       }
       const w = weights[all.indexOf(d)] || 0;
-      v.src.playbackRate.setTargetAtTime(clamp(blend.f0 / d.f0, 0.25, 4), t, 0.03);   // on its own dot the rate is 1: the recording as it is
+      v.src.playbackRate.setTargetAtTime(rateOf(d), t, 0.03);
       v.g.gain.setTargetAtTime(w * 0.2 / recRms(d.rec), t, 0.03);
     });
   }
@@ -828,7 +828,7 @@ dialog { background: var(--solid); }
       const r = d.rec, buf = oc.createBuffer(1, r.data.length, r.sr); buf.copyToChannel(r.data, 0);
       const src = oc.createBufferSource(), g = oc.createGain();
       src.buffer = buf; src.loop = true; src.loopStart = Math.min(0.03, r.dur / 4); src.loopEnd = Math.max(r.dur - 0.03, src.loopStart + 0.05);
-      src.playbackRate.value = clamp(blend.f0 / d.f0, 0.25, 4); g.gain.value = w * 0.2 / recRms(r);
+      src.playbackRate.value = rateOf(d); g.gain.value = w * 0.2 / recRms(r);
       src.connect(g).connect(oc.destination); src.start(0, src.loopStart);
     });
     const d = (await oc.startRendering()).getChannelData(0);
@@ -841,7 +841,7 @@ dialog { background: var(--solid); }
     if (realView()) { download(`${fileBase()}-mix.wav`, wavBlob(await renderRealMix(3), SR)); return; }
     const s = shownSound(); if (!s) return;
     const d = await renderSound(s, rec ? clamp(rec.dur, 1, 10) : 3, rec ? Math.min(rec.peak, 0.95) : 0.8);
-    download(`${fileBase()}${tab === 'morph' ? '-blend' : ''}.wav`, wavBlob(d, SR));
+    download(`${fileBase()}${isMap() ? '-blend' : ''}.wav`, wavBlob(d, SR));
   };
 
   // ================= tabs =================
@@ -849,21 +849,25 @@ dialog { background: var(--solid); }
   const LEADS = {
     build: 'Build a sound by hand: set the <b>pitch</b>, draw the <b>harmonics</b>, add <b>noise</b> and a <b>filter</b>, or play it with <b>gestures</b>. Press <b>Play</b> to hear it.',
     voice: 'Record yourself. Your sound is rebuilt from its <b>pitch</b> and <b>harmonics</b>, so you can compare the original with the rebuilt one.',
-    morph: 'Record sounds, put them on the plane, and <b>touch anywhere</b> to hear them mix.',
+    morph: 'Your <b>real voice</b> only. Record sounds, put them on the plane, and <b>touch anywhere</b> to hear your recordings mix.',
+    rebuild: 'The same map, <b>regenerated artificially</b>: each recording is remade from its pitch and harmonics with sine waves.',
   };
   function setTab(t) {
     tab = t;
     document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
-    ['build', 'voice', 'morph'].forEach(k => { $('tab-' + k).hidden = k !== t; });
+    const panel = t === 'rebuild' ? 'morph' : t, map = panel === 'morph';
+    ['build', 'voice', 'morph'].forEach(k => { $('tab-' + k).hidden = k !== panel; });
+    $('tab-morph').querySelector('.mapcard').classList.toggle('rebuild', t === 'rebuild');
+    if (t === 'rebuild' && tool !== 'listen') setTool('listen');
     $('lead').innerHTML = LEADS[t];
     // the shared cards live in whichever tab uses them
     // noise, filter and gestures live in Build; the Morph page is just the map
-    const home = t === 'morph' ? $('sharedHome') : document.querySelector('.slot[data-slot="build"]');
+    const home = map ? $('sharedHome') : document.querySelector('.slot[data-slot="build"]');
     ['noiseCard', 'filterCard', 'gestCard'].forEach(id => home.appendChild($(id)));
-    document.querySelector('.layout').classList.toggle('wide', t === 'morph');
-    if (t === 'morph' && gSrc !== 'off') pickSrc('off');
+    document.querySelector('.layout').classList.toggle('wide', map);
+    if (map && gSrc !== 'off') pickSrc('off');
     gMapText();
-    if (t === 'morph') refreshMorph();
+    if (map) { refreshMorph(); renderCurrent(); tip(); }
     if (t !== 'voice') clearInterval(altTimer);
     else if (listen === 'switch') startAlt();
     showRecUI(); update();
@@ -1190,7 +1194,7 @@ dialog { background: var(--solid); }
     renderCurrent();
   }
   function loadItem(s) {
-    S.f0 = s.f0; S.harm = Float32Array.from(s.harm); S.stretch = s.stretch || 0; S.mode = s.mode; S.list = s.list.map(p => ({ ...p })); S.fromRec = !!s.rec;
+    S.f0 = s.f0 || S.f0; S.harm = Float32Array.from(s.harm); S.stretch = s.stretch || 0; S.mode = s.mode; S.list = s.list.map(p => ({ ...p })); S.fromRec = !!s.rec;
     Object.assign(MIX, s.mix); FILT.on = s.filt.on; FILT.bands = s.filt.bands.map(b => ({ ...b }));
     if (s.rec) { rec = s.rec; $('shift').value = 0; fillR($('shift')); $('shiftOut').textContent = '0 st'; }
     activeId = s.id; renderShelf(); syncBuild(); filterChanged(true); showRecUI(); micUI();
@@ -1207,8 +1211,11 @@ dialog { background: var(--solid); }
       $('shelfMsg').innerHTML = `Deleted “${esc(s.name)}”. <button type="button" class="linkbtn" id="undoDel">Undo</button>`;
       return;
     }
-    if (tab === 'morph') {
-      if (s.mode === 'harm' && s.f0) {
+    if (isMap()) {
+      if (s.example) { mapMsg('The examples are made-up sounds, so they are not on the map. Press Record to add your own voice.'); return; }
+      if (!s.rec) { mapMsg(`“${s.name}” has no recording, so it cannot go on the map.`); return; }
+      if (tab === 'rebuild') return;
+      {
         selUid = s.uid; renderCurrent();
         if (!shapes.some(x => x.uid === s.uid)) { placing = s.uid; mapMsg(`Tap the plane to put “${s.name}” there.`); }
         else tip();
@@ -1229,7 +1236,6 @@ dialog { background: var(--solid); }
     EXAMPLES.forEach((ex, i) => {
       if (!missing.includes(ex[0]) || shelf.some(x => x.example && x.name === ex[0])) return;
       const it = makeExample(i); shelf.splice(Math.min(i, shelf.length), 0, it);
-      if (!shapes.some(h => h.uid === it.uid)) shapes.push({ id: ++shapeId, uid: it.uid, kind: 'point', pts: [{ x: it.x, y: it.y }] });
     });
     persist(); renderShelf(); refreshMorph(); $('shelfMsg').textContent = 'The example sounds are back.';
   }
@@ -1282,9 +1288,9 @@ dialog { background: var(--solid); }
     });
     // the map: saved points, lines and path; the first time, one point per sound where its dot used to be
     if (saved && Array.isArray(saved.shapes)) shapes = saved.shapes;
-    else shelf.forEach(it => { if (it.mode === 'harm' && it.f0) shapes.push({ id: 0, uid: it.uid, kind: 'point', pts: [{ x: it.x, y: it.y }] }); });
+    else shelf.forEach(it => { if (!it.example && it.f0) shapes.push({ id: 0, uid: it.uid, kind: 'point', pts: [{ x: it.x, y: it.y }] }); });
     const uids = new Set(shelf.map(it => it.uid));
-    shapes = shapes.filter(h => h.kind === 'path' || uids.has(h.uid));
+    shapes = shapes.filter(h => h.kind === 'path' || (uids.has(h.uid) && !String(h.uid).startsWith('ex-')));
     shapes.forEach(h => { h.id = ++shapeId; });
     renderShelf();
   }
@@ -1294,9 +1300,9 @@ dialog { background: var(--solid); }
   let shapes = [], shapeId = 0, tool = 'listen', selUid = null, placing = null, stroke = null, erasing = false, pathPlay = null;
   let pt = null, sqDown = false, sqGeom = null, blend = null, weights = null, nearQ = [];
   const SMOOTH = 0.65, blendMode = 'number', PATH_MS = 6000;
-  let voiceMode = 'real';
-  onSeg('mVoice', v => { voiceMode = v; setSeg('mVoice', v); mapMsg(v === 'real' ? 'Real voice: you hear your recordings themselves.' : 'Rebuilt: each sound is remade from its pitch and harmonics with sine waves.'); update(); });
-  const placed = () => shelf.filter(s => s.mode === 'harm' && s.f0 && shapes.some(h => h.uid === s.uid));
+  // only your own recordings are on the map; Rebuild also needs a pitch to regenerate from
+  const placed = () => shelf.filter(s => !s.example && s.rec && s.rec.data && (vMode() === 'real' || s.f0) && shapes.some(h => h.uid === s.uid));
+  const rateOf = d => blend && d.f0 ? clamp(blend.f0 / d.f0, 0.25, 4) : 1;   // on its own dot the rate is 1: the recording as it is
   const mapMsg = t => { $('sqMsg').textContent = t; };
   // distance from p to a shape, and the closest point on it
   function shapeDist(h, p) {
@@ -1324,7 +1330,7 @@ dialog { background: var(--solid); }
   // the blend: pitch averaged on a musical (log) scale, harmonic n from every sound's harmonic n
   function blendAt(w) {
     const D = placed(); if (!w) return null;
-    const P = D.map((d, i) => ({ d, w: w[i] })).filter(o => o.w > 1e-4), W = P.reduce((a, o) => a + o.w, 0);
+    const P = D.map((d, i) => ({ d, w: w[i] })).filter(o => o.w > 1e-4 && o.d.f0 > 0), W = P.reduce((a, o) => a + o.w, 0);
     if (!W) return null;
     const f0 = Math.exp(P.reduce((a, o) => a + o.w * Math.log(o.d.f0), 0) / W), harm = new Float32Array(NH);
     for (let n = 1; n <= NH; n++) harm[n - 1] = P.reduce((a, o) => a + o.w * (o.d.harm[n - 1] || 0), 0) / W;
@@ -1341,15 +1347,16 @@ dialog { background: var(--solid); }
     shapes.forEach(h => { if (kinds && !kinds.includes(h.kind)) return; const r = shapeDist(h, q), dpx = r.d * sqGeom.side; if (dpx <= px && (!best || dpx < best.dpx)) best = { h, dpx, q: r.q }; });
     return best;
   }
-  const curSound = () => shelf.find(x => x.uid === selUid && x.mode === 'harm' && x.f0) || null;
+  const curSound = () => shelf.find(x => x.uid === selUid && !x.example && x.rec) || null;
   function renderCurrent() {
-    if (!curSound()) { const f = shelf.find(x => x.mode === 'harm' && x.f0); selUid = f ? f.uid : null; }
+    if (!curSound()) { const f = shelf.find(x => !x.example && x.rec); selUid = f ? f.uid : null; }
     const s = curSound();
     $('mCurrent').innerHTML = s ? `Your sound: <i style="background:var(--s${s.slot % 8 + 1})"></i><b>${esc(s.name)}</b>` : 'Press <b>Record</b> to make your first sound.';
   }
   function tip() {
     const s = curSound();
     if (placing) return;
+    if (tab === 'rebuild') { mapMsg(placed().length ? 'Touch and drag to hear the rebuilt mix, or press Play to follow your path.' : 'Record sounds on the Morph tab first.'); return; }
     mapMsg({
       listen: 'Touch and drag on the plane to hear your sounds mix.',
       draw: s ? `Draw a line for “${s.name}”. Anywhere on the line plays it.` : 'Record a sound first, then draw its line.',
@@ -1423,12 +1430,11 @@ dialog { background: var(--solid); }
     else mapMsg('Recording… make your sound, then press Stop.');
   }
   function addRecordingToMap(r) {
-    if (!r.f0) { mapMsg('We could not hear a clear note. Try humming, or hold a vowel like “ahh”.'); return; }
     const name = $('saveName').value.trim() || `Sound ${shelf.filter(s => !s.example).length + 1}`;
-    const item = addToShelf(name, { f0: r.f0, harm: Array.from(harmFromRec(r, r.f0, false)), stretch: 0, mode: 'harm', list: [], mix: { h: 0.8, n: 0, color: 'white' }, filt: { on: false, bands: [] }, rec: r }, false);
+    const item = addToShelf(name, { f0: r.f0 || 0, harm: r.f0 ? Array.from(harmFromRec(r, r.f0, false)) : new Array(NH).fill(0), stretch: 0, mode: 'harm', list: [], mix: { h: 0.8, n: 0, color: 'white' }, filt: { on: false, bands: [] }, rec: r }, false);
     if (!item) { mapMsg('My sounds is full. Delete one first.'); return; }
     $('saveName').value = ''; selUid = item.uid; renderCurrent(); placing = item.uid;
-    mapMsg(`Got it! Now tap the plane to put “${name}” there.`); dirty = true;
+    mapMsg(r.f0 ? `Got it! Now tap the plane to put “${name}” there.` : `Got it! It has no clear note, so it will mix in without changing pitch. Tap the plane to put “${name}” there.`); dirty = true;
   }
   // the path: travel along the route from start to end
   const pathShape = () => shapes.find(h => h.kind === 'path');
@@ -1467,7 +1473,7 @@ dialog { background: var(--solid); }
   const POSE_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
   const gStatus = t => { $('gStatus').textContent = t; };
   function gMapText() {
-    const m = tab === 'morph' ? {
+    const m = isMap() ? {
       off: 'Move through the map with <b>Tilt</b> (a phone) or the <b>Camera</b> (your right hand). Press Play to hear it.',
       tilt: '<b>Tilt left ↔ right</b> and <b>forward ↕ back</b> to move through the map.',
       camera: 'Your <b>right hand</b> moves the point: left ↔ right and up ↕ down.',
@@ -1481,7 +1487,7 @@ dialog { background: var(--solid); }
   }
   function gApply() {
     if (!engaged) return;
-    if (tab === 'morph') { pt = { x: clamp(R.x, 0, 1), y: clamp(1 - R.y, 0, 1) }; refreshMorph(); return; }
+    if (isMap()) { pt = { x: clamp(R.x, 0, 1), y: clamp(1 - R.y, 0, 1) }; refreshMorph(); return; }
     let f0 = F_LO * Math.pow(F_HI / F_LO, R.x);
     if ($('gSnap').checked) f0 = 440 * Math.pow(2, Math.round(12 * Math.log2(f0 / 440)) / 12);
     const N = 1 + Math.round(R.y * (NH - 1)), p = 2.5 * (1 - R.spread);
@@ -1606,7 +1612,7 @@ dialog { background: var(--solid); }
     BONES.forEach(([a, b]) => { if (ok(a) && ok(b)) { g.beginPath(); g.moveTo(L[a].x * W, L[a].y * H); g.lineTo(L[b].x * W, L[b].y * H); g.stroke(); } });
     g.globalAlpha = 1;
     [[16, '--a'], [15, '--b']].forEach(([i, c]) => { if (ok(i)) { g.fillStyle = css(c); g.beginPath(); g.arc(L[i].x * W, L[i].y * H, W / 40, 0, 2 * Math.PI); g.fill(); } });
-    if (tab === 'morph') { if (ok(16)) { Rt.x = clamp(1 - L[16].x, 0, 1); Rt.y = clamp(1 - L[16].y, 0, 1); } }
+    if (isMap()) { if (ok(16)) { Rt.x = clamp(1 - L[16].x, 0, 1); Rt.y = clamp(1 - L[16].y, 0, 1); } }
     else {
       if (ok(16)) Rt.x = clamp((0.85 - L[16].y) / 0.7, 0, 1);
       if (ok(15)) Rt.y = clamp((0.85 - L[15].y) / 0.7, 0, 1);
@@ -1626,7 +1632,7 @@ dialog { background: var(--solid); }
       for (let y = 0; y < 48; y++) for (let x = 0; x < 64; x++) { const i = y * 64 + x, df = Math.abs(cur[i] - mPrev[i]); if (df > 25) { sx += x * df; sy += y * df; m += df; } }
       if (m > 3000) {
         const cx = sx / m / 63, cy = sy / m / 47;
-        Rt.x = 1 - cx; Rt.y = 1 - cy; if (tab !== 'morph') Rt.spread = clamp(m / 60000, 0, 1); engaged = true;
+        Rt.x = 1 - cx; Rt.y = 1 - cy; if (!isMap()) Rt.spread = clamp(m / 60000, 0, 1); engaged = true;
         og.fillStyle = css('--a'); og.globalAlpha = 0.85; og.beginPath(); og.arc(cx * ov.width, cy * ov.height, ov.width / 30, 0, 2 * Math.PI); og.fill(); og.globalAlpha = 1;
       }
     }
@@ -1659,11 +1665,11 @@ dialog { background: var(--solid); }
     const val = t => { let v = 0; for (let i = 0; i < w.length; i++) v += a[i] * Math.sin(w[i] * t + ph[i]); if (ns) { const j = Math.floor(t * SR) % NL; v += ns * nx[j < 0 ? j + NL : j]; } return v; };
     return { val, fmax: E.length ? Math.max(...E.map(p => p.f)) : 0, noisy: ns > 0, empty: !E.length && !ns, E };
   }
-  const realView = () => tab === 'morph' && voiceMode === 'real' && blend && weights;
+  const realView = () => isMap() && vMode() === 'real' && weights;
   // the real mix: each recording read at its playback rate, weighted as it is played
   function realSignal() {
     const all = placed(), parts = all.map((d, i) => ({ d, w: weights[i] || 0 })).filter(o => o.w > 0.005 && o.d.rec && o.d.rec.data);
-    const P = parts.map(o => { const r = o.d.rec, rate = clamp(blend.f0 / o.d.f0, 0.25, 4), a = Math.round(Math.min(0.03, r.dur / 4) * r.sr), z = Math.max(a + 10, r.data.length - Math.round(0.03 * r.sr)); return { x: r.data, k: o.w * 0.2 / recRms(r), step: rate * r.sr, a, len: z - a, off: Math.round(0.25 * (z - a)) }; });
+    const P = parts.map(o => { const r = o.d.rec, rate = rateOf(o.d), a = Math.round(Math.min(0.03, r.dur / 4) * r.sr), z = Math.max(a + 10, r.data.length - Math.round(0.03 * r.sr)); return { x: r.data, k: o.w * 0.2 / recRms(r), step: rate * r.sr, a, len: z - a, off: Math.round(0.25 * (z - a)) }; });
     const val = t => { let v = 0; for (const q of P) { const j = q.a + (q.off + Math.floor(t * q.step)) % q.len; v += q.k * q.x[j]; } return v; };
     return { val, fmax: 20000, noisy: true, real: true, empty: !P.length, E: [] };
   }
@@ -1697,7 +1703,7 @@ dialog { background: var(--solid); }
       g.globalAlpha = 1;
     }
     // the sound
-    const s = shownSound(), live = !(tab === 'voice' && mic);
+    const s = shownSound() || (realView() ? {} : null), live = !(tab === 'voice' && mic);
     if (s && live) {
       const sig = realView() ? realSignal() : synthSignal(s);
       if (!sig.empty) {
@@ -1717,8 +1723,8 @@ dialog { background: var(--solid); }
         }
         const per = !sig.noisy && s.mode === 'harm' ? periodOf(sig.E) : sig.noisy ? null : periodOf(sig.E);
         hint.unshift(sig.real ? 'Your real recordings, mixed as you hear them' : sig.noisy ? (sig.E.length ? 'Harmonics plus noise: the shape repeats only roughly' : 'Noise only: no repeating shape') : per && per.c ? `Repeats every <b>${fmtDur(1 / per.c)}</b>` : 'Never repeats exactly (inharmonic)');
-      } else hint.unshift(tab === 'morph' ? 'Press in the map to hear a blend' : 'Silent: raise the harmonics or noise level');
-    } else if (tab === 'morph') hint.unshift('Press in the map to hear a blend');
+      } else hint.unshift(isMap() ? 'Press in the map to hear a blend' : 'Silent: raise the harmonics or noise level');
+    } else if (isMap()) hint.unshift('Press in the map to hear a blend');
     if (RV && !(tab === 'voice' && mic)) hint.push('<b>My recording</b> (own scale)');
     if (waveHover != null) { g.strokeStyle = css('--accent'); g.setLineDash([3, 3]); g.beginPath(); g.moveTo(waveHover, pad.t); g.lineTo(waveHover, pad.t + ph); g.stroke(); g.setLineDash([]); hint.push(`t = <b>${fmtDur(Math.max(0, (waveHover - pad.l) / pw * winSec))}</b>`); }
     g.restore();
@@ -1744,7 +1750,7 @@ dialog { background: var(--solid); }
       g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.strokeStyle = css('--v'); g.lineWidth = 1.25; g.stroke();
       legend.push(['--v', tab === 'voice' && mic ? 'Microphone' : 'My recording', 'line']);
     }
-    const s = shownSound(), useF = filterOn();
+    const s = shownSound() || (realView() ? {} : null), useF = filterOn();
     const showSynth = s && !(tab === 'voice' && mic);
     // noise: a shaded band, as loud as its slider, shaped by the filter
     if (showSynth && noiseLevel() > 0) {
@@ -1766,7 +1772,7 @@ dialog { background: var(--solid); }
       const pts = []; let top = 1e-12;
       for (let x = 0; x <= pw; x++) {
         const f = xf(pad.l + x); let pwr = 0;
-        parts.forEach(o => { const r = o.d.rec, k = Math.round(f / clamp(blend.f0 / o.d.f0, 0.25, 4) / (r.sr / VN)); if (k > 0 && k < r.db.length) pwr += o.w * Math.pow(10, r.db[k] / 10); });
+        parts.forEach(o => { const r = o.d.rec, k = Math.round(f / rateOf(o.d) / (r.sr / VN)); if (k > 0 && k < r.db.length) pwr += o.w * Math.pow(10, r.db[k] / 10); });
         pts.push([pad.l + x, pwr]); top = Math.max(top, pwr);
       }
       const ca = css('--a');
@@ -1788,7 +1794,7 @@ dialog { background: var(--solid); }
         g.strokeStyle = gr; g.lineWidth = 1.75; g.beginPath(); g.moveTo(x, pad.t + ph); g.lineTo(x, y); g.stroke();
         g.fillStyle = ca; g.shadowColor = alpha(ca, 0.8); g.shadowBlur = glowOn() ? 10 : 5; g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
       });
-      if (E.length) legend.unshift(['--a', tab === 'morph' ? 'Blend' : tab === 'voice' ? 'Rebuilt' : 'Harmonics', 'dot']);
+      if (E.length) legend.unshift(['--a', isMap() ? 'Blend' : tab === 'voice' ? 'Rebuilt' : 'Harmonics', 'dot']);
     }
     specGeom = { pad, pw, stems, xf, vd, vsr };
     if (specHover != null) { g.strokeStyle = css('--accent'); g.setLineDash([3, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(specHover, pad.t); g.lineTo(specHover, pad.t + ph); g.stroke(); g.setLineDash([]); }
@@ -1835,13 +1841,15 @@ dialog { background: var(--solid); }
     const label = (sd, p, offY) => { g.fillStyle = css('--ink'); g.font = font(12, 600); g.textAlign = p.x > 0.8 ? 'right' : p.x < 0.2 ? 'left' : 'center'; g.textBaseline = p.y > 0.85 ? 'bottom' : 'top'; g.fillText(sd.name, X(p), Y(p) + (p.y > 0.85 ? -offY : offY)); };
     shapes.filter(sh => sh.kind === 'line').forEach(sh => {
       const sd = byUid[sh.uid]; if (!sd) return; const c = col(sd), wi = wOf(sh.uid);
+      g.globalAlpha = D.includes(sd) ? 1 : 0.25;
       g.lineCap = 'round'; g.lineJoin = 'round';
       g.strokeStyle = alpha(c, 0.18 + 0.25 * wi); g.lineWidth = 16 + 14 * wi; poly(sh.pts); g.stroke();
       g.strokeStyle = c; g.lineWidth = 6; g.shadowColor = alpha(c, 0.7); g.shadowBlur = 10; poly(sh.pts); g.stroke(); g.shadowBlur = 0;
-      label(sd, sh.pts[0], 12);
+      label(sd, sh.pts[0], 12); g.globalAlpha = 1;
     });
     shapes.filter(sh => sh.kind === 'point').forEach(sh => {
       const sd = byUid[sh.uid]; if (!sd) return; const c = col(sd), wi = wOf(sh.uid), p = sh.pts[0];
+      if (!D.includes(sd)) { g.globalAlpha = 0.25; g.fillStyle = c; g.beginPath(); g.arc(X(p), Y(p), 12, 0, 2 * Math.PI); g.fill(); g.globalAlpha = 1; label(sd, p, 18); return; }
       g.fillStyle = c; g.globalAlpha = 0.18; g.beginPath(); g.arc(X(p), Y(p), 19 + 14 * wi, 0, 2 * Math.PI); g.fill();
       g.globalAlpha = 1; g.shadowColor = alpha(c, 0.7); g.shadowBlur = 12; g.beginPath(); g.arc(X(p), Y(p), 12, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
       label(sd, p, 18);
@@ -1857,9 +1865,9 @@ dialog { background: var(--solid); }
       g.strokeStyle = css('--ink'); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 9, 0, 2 * Math.PI); g.stroke();
       g.beginPath(); g.moveTo(cx - 15, cy); g.lineTo(cx - 5, cy); g.moveTo(cx + 5, cy); g.lineTo(cx + 15, cy); g.moveTo(cx, cy - 15); g.lineTo(cx, cy - 5); g.moveTo(cx, cy + 5); g.lineTo(cx, cy + 15); g.stroke();
     }
-    if (!shapes.length) { g.fillStyle = css('--muted'); g.font = font(14, 400); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Press Record to make your first sound', w / 2, h / 2); }
+    if (!shapes.length) { g.fillStyle = css('--muted'); g.font = font(14, 400); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(tab === 'rebuild' ? 'Record sounds on the Morph tab first' : 'Press Record to make your first sound', w / 2, h / 2); }
     const mix = weights ? D.map((s, i) => [s, weights[i]]).filter(([, v]) => v >= 0.01).sort((a, b) => b[1] - a[1]).map(([s, v]) => `<b style="color:var(--s${s.slot % 8 + 1})">${esc(s.name)}</b> ${Math.round(v * 100)}%`).join(' · ') : '';
-    $('sqOut').innerHTML = (sqDown || pathPlay) && blend ? `Pitch <b>${fmtF(blend.f0)}</b> · ${mix}` : '';
+    $('sqOut').innerHTML = (sqDown || pathPlay) && weights ? (blend ? `Pitch <b>${fmtF(blend.f0)}</b> · ` : '') + mix : '';
   }
 
   // ================= loop =================
@@ -1869,7 +1877,7 @@ dialog { background: var(--solid); }
       if (++vFrame % 3 === 0) { liveAnalyse(); micUI(); }
       if (tab === 'voice') dirty = true;
     }
-    if (dirty) { dirty = false; drawWave(); drawSpec(); if (tab === 'morph') drawSquare(); }
+    if (dirty) { dirty = false; drawWave(); drawSpec(); if (isMap()) drawSquare(); }
     if (barsDirty && tab === 'build') drawBars();
     if (padDirty) drawPad();
     requestAnimationFrame(frame);
