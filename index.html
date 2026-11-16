@@ -362,6 +362,7 @@ dialog { background: var(--solid); }
           <div class="current" id="mCurrent"></div>
           <canvas id="square" aria-label="The sound plane. Dots and lines are your sounds; touch anywhere to hear them mix."></canvas>
           <p class="maptip" id="sqMsg" role="status"></p>
+          <div class="row" style="justify-content:center"><div class="seg" id="mVoice" aria-label="What you hear"><button data-v="real" aria-pressed="true">Real voice</button><button data-v="rebuilt" aria-pressed="false">Rebuilt</button></div></div>
           <div class="hint maphint" id="sqOut"></div>
         </section>
         <div class="slot" data-slot="morph"></div>
@@ -438,7 +439,8 @@ dialog { background: var(--solid); }
         <li><b>Draw</b>: draw a line for your sound. Anywhere on the line plays it.</li>
         <li><b>Listen</b>: touch and drag anywhere to hear your sounds mix. The closer a sound, the louder it is in the mix.</li>
         <li><b>Path</b>: draw a route, then press <b>Play</b> to travel along it.</li>
-        <li><b>Erase</b>: rub over anything to remove it.</li></ol></div>
+        <li><b>Erase</b>: rub over anything to remove it.</li>
+        <li><b>Real voice</b> plays your recordings themselves; <b>Rebuilt</b> remakes them from pitch and harmonics.</li></ol></div>
     </div>
   </div>
 </dialog>
@@ -503,7 +505,9 @@ dialog { background: var(--solid); }
 
   // ================= filter maths (the same formulas as Web Audio's biquad) =================
   const FTYPES = { bandpass: 'Band-pass', lowpass: 'Low-pass', highpass: 'High-pass', peaking: 'Peak' };
-  const filterOn = () => FILT.on && FILT.bands.length > 0;
+  const filterOn = () => tab !== 'morph' && FILT.on && FILT.bands.length > 0;
+  // Morph has no level, noise or filter controls, so it uses a plain fixed mix
+  const hLevel = () => tab === 'morph' ? 0.8 : MIX.h, noiseLevel = () => tab === 'morph' ? 0 : MIX.n;
   function coefs(b, sr) {
     const w0 = 2 * Math.PI * clamp(b.f, 10, sr / 2 - 10) / sr, cs = Math.cos(w0), al = Math.sin(w0) / (2 * b.q);
     let b0, b1, b2, a0, a1, a2;
@@ -528,7 +532,7 @@ dialog { background: var(--solid); }
   }
   const eff = P => P.map(p => { const [m, ph] = filterAt(p.f); return { f: p.f, a: p.a * m, ph, n: p.n }; });
   // output scale for harmonics: the Level slider sets the peak, whatever the filter does
-  const hScale = E => { const s = E.reduce((t, p) => t + p.a, 0); return s > 0 ? MIX.h * 0.8 / Math.max(s, 0.05) : 0; };
+  const hScale = E => { const s = E.reduce((t, p) => t + p.a, 0); return s > 0 ? hLevel() * 0.8 / Math.max(s, 0.05) : 0; };
 
   // ================= noise =================
   const NL = 1 << 17, RAW = {};
@@ -560,7 +564,7 @@ dialog { background: var(--solid); }
     nCache = { key, x: y, rms: rmsOf(y) || 1e-6 };
     return nCache;
   }
-  const nScale = () => MIX.n * 0.25 / noiseView().rms;
+  const nScale = () => noiseLevel() * 0.25 / noiseView().rms;
   const noisePsd = f => (MIX.color === 'pink' ? 1000 / f : 1) * Math.pow(filterAt(f)[0], 2);
 
   // ================= analysis (pitch, harmonics) =================
@@ -732,9 +736,16 @@ dialog { background: var(--solid); }
     const t = ac.currentTime, useF = filterOn(), h = (playing || sqDown) ? heard() : 'none';
     fDry.gain.setTargetAtTime(useF ? 0 : 1, t, 0.02); fWet.gain.setTargetAtTime(useF ? 1 : 0, t, 0.02);
     out.gain.setTargetAtTime(vol, t, 0.02);
-    const synth = h === 'synth' || h === 'morph';
-    const P = synth ? partialsOf(h === 'morph' ? blend : S) : [], E = eff(P);
-    bankG.gain.setTargetAtTime(synth ? hScale(E) : 0, t, 0.03);
+    const synth = h === 'synth' || h === 'morph', real = h === 'morph' && voiceMode === 'real';
+    // real voice: recordings play themselves; sine waves stand in only for sounds that have no recording
+    let synthSound = h === 'morph' ? blend : S, part = 1;
+    if (real) {
+      const D = placed(), wn = D.map((d, i) => d.rec ? 0 : (weights[i] || 0)), sum = wn.reduce((a, b) => a + b, 0);
+      if (sum > 1e-4) { synthSound = { ...blendAt(wn), f0: blend.f0 }; part = sum; } else synthSound = null;
+    }
+    syncVoices(real);
+    const P = synth && synthSound ? partialsOf(synthSound) : [], E = eff(P);
+    bankG.gain.setTargetAtTime(synth ? hScale(E) * part : 0, t, 0.03);
     P.forEach((p, i) => {
       let v = bank[i];
       if (!v) { const o = ac.createOscillator(), g = ac.createGain(); g.gain.value = 0; o.frequency.value = p.f; o.connect(g).connect(bankG); o.start(); v = bank[i] = { o, g }; }
@@ -746,6 +757,29 @@ dialog { background: var(--solid); }
     const r = h === 'rec' ? rec : null;
     recG.gain.setTargetAtTime(r ? 0.8 / r.peak : 0, t, 0.02);
     recPlay(r);
+  }
+  // one looping player per recording on the map, pitch-shifted to the blended pitch and mixed by distance
+  const voices = new Map();
+  const recRms = r => r.rms || (r.rms = rmsOf(r.data) || 1e-3);
+  function syncVoices(on) {
+    const t = ac.currentTime, D = on ? placed().filter(d => d.rec && d.rec.data) : [];
+    voices.forEach((v, uid) => { if (!D.some(d => d.uid === uid)) { v.g.gain.setTargetAtTime(0, t, 0.04); v.src.stop(t + 0.3); voices.delete(uid); } });
+    if (!on || !blend) return;
+    const all = placed();
+    D.forEach(d => {
+      let v = voices.get(d.uid);
+      if (!v) {
+        const r = d.rec;
+        if (!r.buf) { r.buf = ac.createBuffer(1, r.data.length, r.sr); r.buf.copyToChannel(r.data, 0); }
+        const src = ac.createBufferSource(), g = ac.createGain();
+        src.buffer = r.buf; src.loop = true; src.loopStart = Math.min(0.03, r.dur / 4); src.loopEnd = Math.max(r.dur - 0.03, src.loopStart + 0.05);
+        g.gain.value = 0; src.connect(g).connect(out); src.start(t + 0.02, src.loopStart);
+        v = { src, g }; voices.set(d.uid, v);
+      }
+      const w = weights[all.indexOf(d)] || 0;
+      v.src.playbackRate.setTargetAtTime(clamp(blend.f0 / d.f0, 0.25, 4), t, 0.03);   // on its own dot the rate is 1: the recording as it is
+      v.g.gain.setTargetAtTime(w * 0.2 / recRms(d.rec), t, 0.03);
+    });
   }
   function setPlaying(v) {
     playing = v;
@@ -779,14 +813,32 @@ dialog { background: var(--solid); }
     else mix.connect(oc.destination);
     const P = partialsOf(s), bg = oc.createGain(); bg.gain.value = hScale(eff(P)); bg.connect(mix);
     P.forEach(p => { const o = oc.createOscillator(), g = oc.createGain(); o.frequency.value = p.f; g.gain.value = p.a; o.connect(g).connect(bg); o.start(); });
-    if (MIX.n > 0) { const src = oc.createBufferSource(), g = oc.createGain(); src.buffer = noiseBuffer(oc, MIX.color); src.loop = true; g.gain.value = nScale(); src.connect(g).connect(mix); src.start(); }
+    if (noiseLevel() > 0) { const src = oc.createBufferSource(), g = oc.createGain(); src.buffer = noiseBuffer(oc, MIX.color); src.loop = true; g.gain.value = nScale(); src.connect(g).connect(mix); src.start(); }
     const d = (await oc.startRendering()).getChannelData(0);
     let pk = 0; for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i]));
     const g = (peakTo || 0.8) / (pk || 1), fade = Math.round(0.02 * SR), n = d.length;
     for (let i = 0; i < n; i++) d[i] *= g * Math.min(1, i / fade, (n - 1 - i) / fade);
     return d;
   }
+  // the real-voice mix, rendered offline exactly as it plays: each recording at its rate and weight
+  async function renderRealMix(dur) {
+    const oc = new OfflineAudioContext(1, Math.round(dur * SR), SR), all = placed();
+    all.forEach((d, i) => {
+      const w = weights[i] || 0; if (w < 0.005 || !d.rec || !d.rec.data) return;
+      const r = d.rec, buf = oc.createBuffer(1, r.data.length, r.sr); buf.copyToChannel(r.data, 0);
+      const src = oc.createBufferSource(), g = oc.createGain();
+      src.buffer = buf; src.loop = true; src.loopStart = Math.min(0.03, r.dur / 4); src.loopEnd = Math.max(r.dur - 0.03, src.loopStart + 0.05);
+      src.playbackRate.value = clamp(blend.f0 / d.f0, 0.25, 4); g.gain.value = w * 0.2 / recRms(r);
+      src.connect(g).connect(oc.destination); src.start(0, src.loopStart);
+    });
+    const d = (await oc.startRendering()).getChannelData(0);
+    let pk = 0; for (let i = 0; i < d.length; i++) pk = Math.max(pk, Math.abs(d[i]));
+    const g = 0.8 / (pk || 1), fade = Math.round(0.02 * SR), n = d.length;
+    for (let i = 0; i < n; i++) d[i] *= g * Math.min(1, i / fade, (n - 1 - i) / fade);
+    return d;
+  }
   $('dlSound').onclick = async () => {
+    if (realView()) { download(`${fileBase()}-mix.wav`, wavBlob(await renderRealMix(3), SR)); return; }
     const s = shownSound(); if (!s) return;
     const d = await renderSound(s, rec ? clamp(rec.dur, 1, 10) : 3, rec ? Math.min(rec.peak, 0.95) : 0.8);
     download(`${fileBase()}${tab === 'morph' ? '-blend' : ''}.wav`, wavBlob(d, SR));
@@ -1101,9 +1153,30 @@ dialog { background: var(--solid); }
     const used = new Set(shelf.map(s => s.slot)); let slot = 0; while (used.has(slot)) slot++;
     const sp = SPOTS[slot % SPOTS.length], item = { id: nextId++, uid: newUid(), name, slot, x: sp[0], y: sp[1], ...snap(), ...extra };
     shelf.push(item); activeId = item.id;
+    if (item.rec && !item.example) recPut(item.uid, item.rec);
     if (place && item.mode === 'harm' && item.f0) shapes.push({ id: ++shapeId, uid: item.uid, kind: 'point', pts: [{ x: sp[0], y: sp[1] }] });
     persist(); renderShelf(); refreshMorph();
     return item;
+  }
+  // recordings: kept in the browser's IndexedDB (they are too large for localStorage)
+  const dbP = new Promise(res => {
+    try { const r = indexedDB.open('partialslab', 1); r.onupgradeneeded = () => r.result.createObjectStore('recs'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); }
+    catch (e) { res(null); }
+  });
+  async function recPut(uid, r) {
+    const db = await dbP; if (!db || !r || !r.data) return;
+    try { const { buf: _b, ...plain } = r; db.transaction('recs', 'readwrite').objectStore('recs').put(plain, uid); } catch (e) { /* storage full or blocked: the recording lasts until reload */ }
+  }
+  async function recDel(uid) { const db = await dbP; if (!db) return; try { db.transaction('recs', 'readwrite').objectStore('recs').delete(uid); } catch (e) { /* ignore */ } }
+  async function recLoadAll() {
+    const db = await dbP; if (!db) return;
+    const map = await new Promise(res => {
+      const m = new Map();
+      try { const c = db.transaction('recs').objectStore('recs').openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { m.set(cur.key, cur.value); cur.continue(); } else res(m); }; c.onerror = () => res(m); }
+      catch (e) { res(m); }
+    });
+    let n = 0; shelf.forEach(it => { if (!it.rec && map.has(it.uid)) { it.rec = map.get(it.uid); n++; } });
+    if (n) { renderShelf(); refreshMorph(); }
   }
   function persist() {
     try { localStorage.setItem(LS, JSON.stringify({ hiddenEx, shapes, shelf: shelf.filter(s => !s.example).map(({ rec: _r, ...rest }) => rest) })); } catch (e) { /* storage unavailable: sounds last until reload */ }
@@ -1129,7 +1202,7 @@ dialog { background: var(--solid); }
     const s = shelf.find(x => x.id === +chip.dataset.id);
     if (e.target.closest('.x')) {
       lastDeleted = { item: s, index: shelf.indexOf(s), shapes: shapes.filter(h => h.uid === s.uid) };
-      shelf = shelf.filter(x => x !== s); shapes = shapes.filter(h => h.uid !== s.uid); if (s.example) hiddenEx.push(s.name);
+      shelf = shelf.filter(x => x !== s); shapes = shapes.filter(h => h.uid !== s.uid); if (s.example) hiddenEx.push(s.name); else recDel(s.uid);
       if (activeId === s.id) activeId = null; persist(); renderShelf(); refreshMorph();
       $('shelfMsg').innerHTML = `Deleted “${esc(s.name)}”. <button type="button" class="linkbtn" id="undoDel">Undo</button>`;
       return;
@@ -1146,7 +1219,7 @@ dialog { background: var(--solid); }
   });
   $('shelfMsg').addEventListener('click', e => {
     if (!e.target.closest('#undoDel') || !lastDeleted) return;
-    const { item, index, shapes: gone } = lastDeleted; lastDeleted = null; shapes.push(...gone);
+    const { item, index, shapes: gone } = lastDeleted; lastDeleted = null; shapes.push(...gone); if (item.rec && !item.example) recPut(item.uid, item.rec);
     if (shelf.some(x => x.slot === item.slot)) { const used = new Set(shelf.map(x => x.slot)); let k = 0; while (used.has(k)) k++; item.slot = k; }
     shelf.splice(Math.min(index, shelf.length), 0, item); hiddenEx = hiddenEx.filter(n => n !== item.name || !item.example);
     persist(); renderShelf(); refreshMorph(); $('shelfMsg').textContent = `Restored “${item.name}”.`;
@@ -1221,6 +1294,8 @@ dialog { background: var(--solid); }
   let shapes = [], shapeId = 0, tool = 'listen', selUid = null, placing = null, stroke = null, erasing = false, pathPlay = null;
   let pt = null, sqDown = false, sqGeom = null, blend = null, weights = null, nearQ = [];
   const SMOOTH = 0.65, blendMode = 'number', PATH_MS = 6000;
+  let voiceMode = 'real';
+  onSeg('mVoice', v => { voiceMode = v; setSeg('mVoice', v); mapMsg(v === 'real' ? 'Real voice: you hear your recordings themselves.' : 'Rebuilt: each sound is remade from its pitch and harmonics with sine waves.'); update(); });
   const placed = () => shelf.filter(s => s.mode === 'harm' && s.f0 && shapes.some(h => h.uid === s.uid));
   const mapMsg = t => { $('sqMsg').textContent = t; };
   // distance from p to a shape, and the closest point on it
@@ -1579,10 +1654,18 @@ dialog { background: var(--solid); }
   const recVisible = () => rec && (tab === 'voice' || ($('showRec').checked && tab === 'build'));
   // the synthesized signal (harmonics after the filter, plus filtered noise), exactly as it is played
   function synthSignal(s) {
-    const E = MIX.h > 0 ? eff(partialsOf(s)) : [], k = hScale(E), nv = noiseView(), ns = MIX.n > 0 ? nScale() : 0;
+    const E = hLevel() > 0 ? eff(partialsOf(s)) : [], k = hScale(E), nv = noiseView(), ns = noiseLevel() > 0 ? nScale() : 0;
     const w = Float64Array.from(E, p => 2 * Math.PI * p.f), a = Float64Array.from(E, p => p.a * k), ph = Float64Array.from(E, p => p.ph), nx = nv.x;
     const val = t => { let v = 0; for (let i = 0; i < w.length; i++) v += a[i] * Math.sin(w[i] * t + ph[i]); if (ns) { const j = Math.floor(t * SR) % NL; v += ns * nx[j < 0 ? j + NL : j]; } return v; };
     return { val, fmax: E.length ? Math.max(...E.map(p => p.f)) : 0, noisy: ns > 0, empty: !E.length && !ns, E };
+  }
+  const realView = () => tab === 'morph' && voiceMode === 'real' && blend && weights;
+  // the real mix: each recording read at its playback rate, weighted as it is played
+  function realSignal() {
+    const all = placed(), parts = all.map((d, i) => ({ d, w: weights[i] || 0 })).filter(o => o.w > 0.005 && o.d.rec && o.d.rec.data);
+    const P = parts.map(o => { const r = o.d.rec, rate = clamp(blend.f0 / o.d.f0, 0.25, 4), a = Math.round(Math.min(0.03, r.dur / 4) * r.sr), z = Math.max(a + 10, r.data.length - Math.round(0.03 * r.sr)); return { x: r.data, k: o.w * 0.2 / recRms(r), step: rate * r.sr, a, len: z - a, off: Math.round(0.25 * (z - a)) }; });
+    const val = t => { let v = 0; for (const q of P) { const j = q.a + (q.off + Math.floor(t * q.step)) % q.len; v += q.k * q.x[j]; } return v; };
+    return { val, fmax: 20000, noisy: true, real: true, empty: !P.length, E: [] };
   }
   function drawWave() {
     const { g, w, h } = fit($('wave'));
@@ -1616,7 +1699,7 @@ dialog { background: var(--solid); }
     // the sound
     const s = shownSound(), live = !(tab === 'voice' && mic);
     if (s && live) {
-      const sig = synthSignal(s);
+      const sig = realView() ? realSignal() : synthSignal(s);
       if (!sig.empty) {
         const N = winSec * SR, pts = [];
         if (N <= pw * 2) { for (let i = 0; i <= N; i++) pts.push([pad.l + i / N * pw, sig.val(i / SR)]); }
@@ -1633,7 +1716,7 @@ dialog { background: var(--solid); }
           for (let c = 0; c < cols; c++) g.lineTo(pad.l + c, mid - mx[c] * sc); for (let c = cols - 1; c >= 0; c--) g.lineTo(pad.l + c, mid - mn[c] * sc); g.closePath(); g.fill(); g.globalAlpha = 1;
         }
         const per = !sig.noisy && s.mode === 'harm' ? periodOf(sig.E) : sig.noisy ? null : periodOf(sig.E);
-        hint.unshift(sig.noisy ? (sig.E.length ? 'Harmonics plus noise: the shape repeats only roughly' : 'Noise only: no repeating shape') : per && per.c ? `Repeats every <b>${fmtDur(1 / per.c)}</b>` : 'Never repeats exactly (inharmonic)');
+        hint.unshift(sig.real ? 'Your real recordings, mixed as you hear them' : sig.noisy ? (sig.E.length ? 'Harmonics plus noise: the shape repeats only roughly' : 'Noise only: no repeating shape') : per && per.c ? `Repeats every <b>${fmtDur(1 / per.c)}</b>` : 'Never repeats exactly (inharmonic)');
       } else hint.unshift(tab === 'morph' ? 'Press in the map to hear a blend' : 'Silent: raise the harmonics or noise level');
     } else if (tab === 'morph') hint.unshift('Press in the map to hear a blend');
     if (RV && !(tab === 'voice' && mic)) hint.push('<b>My recording</b> (own scale)');
@@ -1664,10 +1747,10 @@ dialog { background: var(--solid); }
     const s = shownSound(), useF = filterOn();
     const showSynth = s && !(tab === 'voice' && mic);
     // noise: a shaded band, as loud as its slider, shaped by the filter
-    if (showSynth && MIX.n > 0) {
+    if (showSynth && noiseLevel() > 0) {
       const pts = []; let top = 0;
       for (let x = 0; x <= pw; x += 2) { const v = noisePsd(xf(pad.l + x)); pts.push([pad.l + x, v]); top = Math.max(top, v); }
-      g.beginPath(); g.moveTo(pad.l, pad.t + ph); pts.forEach(([x, v]) => g.lineTo(x, dy(a2db(MIX.n) + 10 * Math.log10(v / top + 1e-12)))); g.lineTo(pad.l + pw, pad.t + ph); g.closePath();
+      g.beginPath(); g.moveTo(pad.l, pad.t + ph); pts.forEach(([x, v]) => g.lineTo(x, dy(a2db(noiseLevel()) + 10 * Math.log10(v / top + 1e-12)))); g.lineTo(pad.l + pw, pad.t + ph); g.closePath();
       g.fillStyle = css('--b-dim'); g.fill(); legend.push(['--b', 'Noise', 'fill']);
     }
     if (showSynth && useF) {
@@ -1677,13 +1760,29 @@ dialog { background: var(--solid); }
       g.strokeStyle = css('--accent'); g.globalAlpha = 0.75; g.lineWidth = 2; g.setLineDash([6, 4]); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
       legend.push(['--accent', 'Filter', 'dash']);
     }
+    if (showSynth && realView()) {
+      // the real mix: each recording's spectrum, stretched by its playback rate, weighted and added
+      const all = placed(), parts = all.map((d, i) => ({ d, w: weights[i] || 0 })).filter(o => o.w > 0.005 && o.d.rec && o.d.rec.db);
+      const pts = []; let top = 1e-12;
+      for (let x = 0; x <= pw; x++) {
+        const f = xf(pad.l + x); let pwr = 0;
+        parts.forEach(o => { const r = o.d.rec, k = Math.round(f / clamp(blend.f0 / o.d.f0, 0.25, 4) / (r.sr / VN)); if (k > 0 && k < r.db.length) pwr += o.w * Math.pow(10, r.db[k] / 10); });
+        pts.push([pad.l + x, pwr]); top = Math.max(top, pwr);
+      }
+      const ca = css('--a');
+      g.beginPath(); g.moveTo(pad.l, pad.t + ph); pts.forEach(([x, v]) => g.lineTo(x, dy(10 * Math.log10(v / top + 1e-12)))); g.lineTo(pad.l + pw, pad.t + ph); g.closePath();
+      g.fillStyle = alpha(ca, 0.18); g.fill();
+      g.beginPath(); pts.forEach(([x, v], i) => { const y = dy(10 * Math.log10(v / top + 1e-12)); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+      g.strokeStyle = ca; g.lineWidth = 1.5; g.shadowColor = alpha(ca, 0.6); g.shadowBlur = glowOn() ? 8 : 0; g.stroke(); g.shadowBlur = 0;
+      legend.push(['--a', 'Your voices, mixed', 'line']);
+    }
     const stems = [];
-    if (showSynth && MIX.h > 0) {
+    if (showSynth && hLevel() > 0 && !realView()) {
       const E = eff(partialsOf(s)), top = Math.max(...E.map(p => p.a), 1e-12);
       const ca = css('--a');
       E.forEach(p => {
         if (p.f < SF_LO || p.f > SF_HI) return;
-        const d = a2db(MIX.h * p.a / top), x = fx(p.f), y = dy(d); if (d < DB_LO) return;
+        const d = a2db(hLevel() * p.a / top), x = fx(p.f), y = dy(d); if (d < DB_LO) return;
         stems.push({ x, p, d });
         const gr = g.createLinearGradient(0, y, 0, pad.t + ph); gr.addColorStop(0, alpha(ca, 0.95)); gr.addColorStop(1, alpha(ca, 0.1));
         g.strokeStyle = gr; g.lineWidth = 1.75; g.beginPath(); g.moveTo(x, pad.t + ph); g.lineTo(x, y); g.stroke();
@@ -1787,6 +1886,7 @@ dialog { background: var(--solid); }
   loadShelf();
   fillR($('vol')); fillR($('shift'));
   syncBuild(); setTab('build'); micUI(); showRecUI(); pathUI(); renderCurrent(); tip();
+  recLoadAll();
   requestAnimationFrame(frame);
 })();
 </script>
