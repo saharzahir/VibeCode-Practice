@@ -449,7 +449,7 @@ dialog { background: var(--solid); }
         <li>The <b>Rebuild</b> tab plays the same drawings remade from pitch and harmonics.</li></ol></div>
       <div class="step"><h3><small>Morph · Hand</small>Steer with your hand</h3><ol>
         <li>Switch <b>Control</b> to <b>Hand</b> and allow the camera. Hold one hand up, fingers pointing at the ceiling.</li>
-        <li><b>Tilt</b> your hand left or right to move left or right. <b>Bend your knuckles</b> (open hand → fist) to move down.</li>
+        <li><b>Tilt</b> your hand left or right to move left or right. <b>Bend your knuckles</b> (open hand → fist) to move up.</li>
         <li>To add a sound: hold a pose, press <b>Record</b> (or the space bar) and sing. Hold still for a dot, move your hand for a line. Press <b>Stop</b>.</li>
         <li>In <b>Listen</b>, the sound follows your hand.</li></ol></div>
       <div class="step" hidden><h3><small>Morph</small>The sound plane</h3><ol>
@@ -1358,8 +1358,8 @@ dialog { background: var(--solid); }
   }
   function refreshMorph() { weights = weightsAt(pt); blend = blendAt(weights); showRecUI(); update(); }
   function sqPoint(e) {
-    const r = $('square').getBoundingClientRect(), { pad, side } = sqGeom, px = e.clientX - r.left, py = e.clientY - r.top;
-    return { x: clamp((px - pad) / side, 0, 1), y: clamp((py - pad) / side, 0, 1) };
+    const r = $('square').getBoundingClientRect(), { ox, oy, side } = sqGeom, px = e.clientX - r.left, py = e.clientY - r.top;
+    return { x: clamp((px - ox) / side, 0, 1), y: clamp((py - oy) / side, 0, 1) };
   }
   function hitShape(q, px = 14) {
     let best = null;
@@ -1373,7 +1373,7 @@ dialog { background: var(--solid); }
     if (ctl === 'hand') {
       mapMsg({
         draw: 'Hold your hand in a pose, press Record (or the space bar) and sing. Move your hand to draw a line. Press Stop when done.',
-        listen: 'Tilt your hand and bend your knuckles to move through your sounds.',
+        listen: 'Tilt your hand to move along x, and bend your knuckles to move up y.',
         erase: 'Rub over a drawing with your mouse or finger to erase it.',
       }[tool]);
       return;
@@ -1469,8 +1469,8 @@ dialog { background: var(--solid); }
     const bend = [[5, 6], [9, 10], [13, 14], [17, 18]].reduce((t, [k, j]) => t + ang(w, L[k], L[j]), 0) / 4;
     return { tilt, bend };
   }
-  // tilted 45° left … right spans the plane left to right; open (about 10°) … bent (about 90°) spans top to bottom
-  const handToPlane = a => ({ x: clamp(0.5 + a.tilt / 90, 0, 1), y: clamp((a.bend - 10) / 80, 0, 1) });
+  // x: tilted 45° left … right spans left to right; y: open (about 10° at the knuckles) at the bottom … a fist (about 90°) at the top
+  const handToPlane = a => ({ x: clamp(0.5 + a.tilt / 90, 0, 1), y: 1 - clamp((a.bend - 10) / 80, 0, 1) });
   function handInput(p) {
     handSeen = performance.now();
     handPt = handPt ? { x: handPt.x + (p.x - handPt.x) * 0.35, y: handPt.y + (p.y - handPt.y) * 0.35 } : { ...p };
@@ -1542,7 +1542,7 @@ dialog { background: var(--solid); }
       drawHand(L);
       if (L) {
         const a = handAngles(L);
-        $('handRead').innerHTML = `Tilt <b>${Math.round(Math.abs(a.tilt))}° ${a.tilt >= 0 ? 'right' : 'left'}</b> · Knuckles <b>${Math.round(clamp(a.bend - 10, 0, 90))}°</b>`;
+        $('handRead').innerHTML = `Tilt <b>${Math.round(Math.abs(a.tilt))}° ${a.tilt >= 0 ? 'right' : 'left'}</b> · Knuckles <b>${Math.round(clamp(a.bend - 10, 0, 80))}°</b>`;
         handInput(handToPlane(a));
       } else $('handRead').textContent = 'No hand in view';
     }
@@ -1916,11 +1916,33 @@ dialog { background: var(--solid); }
   function drawSquare() {
     const { g, w, h } = fit($('square'));
     g.clearRect(0, 0, w, h);
-    const pad = 22, side = Math.min(w, h) - 2 * pad; sqGeom = { pad, side };
-    const X = p => pad + p.x * side, Y = p => pad + p.y * side;
+    const ox = 50, oy = 20, side = Math.min(w - ox - 20, h - oy - 42); sqGeom = { ox, oy, side };
+    const X = p => ox + p.x * side, Y = p => oy + p.y * side;
     g.strokeStyle = css('--grid'); g.lineWidth = 1;
-    for (let i = 0; i <= 4; i++) { const v = pad + side * i / 4; g.beginPath(); g.moveTo(pad, v); g.lineTo(pad + side, v); g.stroke(); g.beginPath(); g.moveTo(v, pad); g.lineTo(v, pad + side); g.stroke(); }
-    g.strokeStyle = css('--line'); g.strokeRect(pad, pad, side, side);
+    for (let i = 0; i <= 4; i++) { const u = side * i / 4; g.beginPath(); g.moveTo(ox, oy + u); g.lineTo(ox + side, oy + u); g.stroke(); g.beginPath(); g.moveTo(ox + u, oy); g.lineTo(ox + u, oy + side); g.stroke(); }
+    // the x and y axes: x to the right along the bottom, y upward along the left, with ticks and their values
+    {
+      const ink = css('--ink'), muted = css('--muted'), x0 = ox, y0 = oy + side, hand = ctl === 'hand';
+      const xt = hand ? ['−45°', '−22°', '0°', '+22°', '+45°'] : ['0', '25', '50', '75', '100'];
+      const yt = hand ? ['0°', '20°', '40°', '60°', '80°'] : ['0', '25', '50', '75', '100'];
+      g.strokeStyle = ink; g.fillStyle = ink; g.globalAlpha = 0.75; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x0 + side + 12, y0); g.stroke();
+      g.beginPath(); g.moveTo(x0 + side + 16, y0); g.lineTo(x0 + side + 8, y0 - 4); g.lineTo(x0 + side + 8, y0 + 4); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x0, oy - 12); g.stroke();
+      g.beginPath(); g.moveTo(x0, oy - 16); g.lineTo(x0 - 4, oy - 8); g.lineTo(x0 + 4, oy - 8); g.closePath(); g.fill();
+      g.globalAlpha = 1; g.lineWidth = 1; g.font = font(10.5, 500); g.fillStyle = muted; g.strokeStyle = muted;
+      for (let i = 0; i <= 4; i++) {
+        const u = side * i / 4;
+        g.beginPath(); g.moveTo(x0 + u, y0); g.lineTo(x0 + u, y0 + 5); g.stroke();
+        g.textAlign = 'center'; g.textBaseline = 'top'; g.fillText(xt[i], x0 + u, y0 + 7);
+        g.beginPath(); g.moveTo(x0, y0 - u); g.lineTo(x0 - 5, y0 - u); g.stroke();
+        g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillText(yt[i], x0 - 8, y0 - u);
+      }
+      g.fillStyle = ink; g.font = font(12, 600);
+      g.textAlign = 'center'; g.textBaseline = 'top'; g.fillText(hand ? 'x · hand tilt (left ← → right)' : 'x', x0 + side / 2, y0 + 22);
+      if (hand) { g.save(); g.translate(14, oy + side / 2); g.rotate(-Math.PI / 2); g.textBaseline = 'middle'; g.fillText('y · knuckle bend (open → fist)', 0, 0); g.restore(); }
+      else { g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('y', 14, oy + side / 2); }
+    }
     const D = placed(), byUid = {}; shelf.forEach(s => { byUid[s.uid] = s; });
     const col = s => css(`--s${s.slot % 8 + 1}`), wOf = uid => { const i = D.findIndex(s => s.uid === uid); return weights && i >= 0 ? weights[i] || 0 : 0; };
     const poly = P => { g.beginPath(); P.forEach((p, i) => i ? g.lineTo(X(p), Y(p)) : g.moveTo(X(p), Y(p))); };
@@ -1952,10 +1974,6 @@ dialog { background: var(--solid); }
       const p = stroke.pts[stroke.pts.length - 1]; g.beginPath(); g.arc(X(p), Y(p), 9, 0, 2 * Math.PI); g.fill(); g.shadowBlur = 0;
     }
     if (ctl === 'hand') {
-      // the two angles on the edges of the plane
-      g.fillStyle = css('--muted'); g.font = font(11, 500);
-      g.textAlign = 'center'; g.textBaseline = 'top'; g.fillText('← tilt left   ·   hand tilt   ·   tilt right →', pad + side / 2, pad + side + 4);
-      g.save(); g.translate(pad - 6, pad + side / 2); g.rotate(-Math.PI / 2); g.textBaseline = 'bottom'; g.fillText('bent ←   knuckles   → open', 0, 0); g.restore();
       if (handPt) {
         const hx = X(handPt), hy = Y(handPt), rec = stroke && stroke.byHand, c = rec ? css('--a') : css('--ink');
         g.strokeStyle = c; g.fillStyle = c; g.lineWidth = 2.5; g.shadowColor = alpha(css('--a'), 0.7); g.shadowBlur = rec ? 14 : 0;
@@ -1967,7 +1985,7 @@ dialog { background: var(--solid); }
       g.strokeStyle = css('--ink'); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 9, 0, 2 * Math.PI); g.stroke();
       g.beginPath(); g.moveTo(cx - 15, cy); g.lineTo(cx - 5, cy); g.moveTo(cx + 5, cy); g.lineTo(cx + 15, cy); g.moveTo(cx, cy - 15); g.lineTo(cx, cy - 5); g.moveTo(cx, cy + 5); g.lineTo(cx, cy + 15); g.stroke();
     }
-    if (!shapes.some(sh => byUid[sh.uid]) && !stroke) { g.fillStyle = css('--muted'); g.font = font(14, 400); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(tab === 'rebuild' ? 'Draw on the Morph tab first' : 'Press and hold here, and speak', w / 2, h / 2); }
+    if (!shapes.some(sh => byUid[sh.uid]) && !stroke) { g.fillStyle = css('--muted'); g.font = font(14, 400); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(tab === 'rebuild' ? 'Draw on the Morph tab first' : ctl === 'hand' ? 'Pose your hand, press Record and sing' : 'Press and hold here, and speak', w / 2, h / 2); }
     $('sqOut').innerHTML = (sqDown || handOn) && weights ? (blend ? `Pitch <b>${fmtF(blend.f0)}</b>` : '') : '';
   }
 
